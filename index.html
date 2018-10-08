@@ -34,6 +34,7 @@ body {
 		var ACCLERATION = 600;
 		var DRAG = 400;
 		var MAXSPEED = 400;
+		var music;
 		var shootSound;
 
 		function preload() {
@@ -43,6 +44,7 @@ body {
 			game.load.baseURL = 'https://asterislazaridis.github.io/Shooter/';
 			game.load.crossOrigin = 'anonymous';
 			//sound
+			game.load.audio('old',['audio/blue.mp3']);
 			game.load.audio('shoot',['audio/Pew.wav']);
 			
 			game.load.image('starfield', 'assets/starfield.png');
@@ -52,9 +54,14 @@ body {
 		}
 
 		function create() {
+			music = game.add.audio('old');
 			shootSound=game.add.audio('shoot');
 			
+			
 			game.scale.pageAlignHorizontally = true;
+			
+			//Music
+			music.play('',0,1,true);
 			
 			//  The scrolling starfield background
 			starfield = game.add.tileSprite(0, 0, 800, 600, 'starfield');
