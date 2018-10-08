@@ -34,6 +34,7 @@ body {
 		var ACCLERATION = 600;
 		var DRAG = 400;
 		var MAXSPEED = 400;
+		var shootSound;
 
 		function preload() {
 
@@ -41,6 +42,8 @@ body {
 			//  Remove the next 2 lines if running locally
 			game.load.baseURL = 'https://asterislazaridis.github.io/Shooter/';
 			game.load.crossOrigin = 'anonymous';
+			//sound
+			game.load.audio('shoot',['audio/Pew! Sound Effect [Pew Pew Pew]-[AudioTrimmer.com]1_1.wav']);
 			
 			game.load.image('starfield', 'assets/starfield.png');
 			game.load.image('ship', 'assets/ship.png');
@@ -130,6 +133,7 @@ body {
 			//  Fire bullet
 			if (player.alive && fireButton.isDown) {
 				fireBullet();
+				shootSound.play();
 			}
 
 			//  Keep the shipTrail lined up with the ship
