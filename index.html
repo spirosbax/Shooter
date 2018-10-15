@@ -54,9 +54,7 @@ body {
 		}
 
 		function create() {
-			music = game.add.audio('old');
-			shootSound=game.add.audio('shoot');
-			
+			music = game.add.audio('old');			
 			
 			game.scale.pageAlignHorizontally = true;
 			
@@ -141,7 +139,6 @@ body {
 			//  Fire bullet
 			if (player.alive && fireButton.isDown) {
 				fireBullet();
-				shootSound.play();
 			}
 
 			//  Keep the shipTrail lined up with the ship
@@ -174,6 +171,11 @@ body {
 					bullet.body.velocity.y += player.body.velocity.y;
 
 					bulletTimer = game.time.now + BULLET_SPACING;
+					
+					// Play shoot sound
+					shootSound=game.add.audio('shoot');
+					shootSound.play();
+
 				}
 			}
 		}
