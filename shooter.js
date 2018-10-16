@@ -37,7 +37,7 @@ function preload() {
     game.load.image('starfield', 'assets/starfield.png');
     game.load.image('ship', 'assets/ship.png');
     game.load.image('bullet', 'assets/bullets/bullet.png');
-    game.load.image('enemy2', '/assets/enemies/enemy2.png');
+    game.load.image('enemy2', 'assets/enemies/enemy2.png');
     game.load.spritesheet('explosion', 'assets/explode.png', 128, 128);
 
     game.load.audio('background', 'assets/audio/Wice_StarFighter.mp3');
