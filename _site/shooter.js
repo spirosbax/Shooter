@@ -168,6 +168,7 @@ function launchEnemy2() {
 
     //  Send another enemy soon
     enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(MIN_ENEMY_SPACING, MAX_ENEMY_SPACING), launchEnemy2);
+    enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(MIN_ENEMY_SPACING, MAX_ENEMY_SPACING), launchEnemy2);
 }
 
 function addEnemyEmitterTrail(enemy) {
@@ -264,6 +265,8 @@ function update() {
         }
         player.kill();
     }
+
+    enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(MIN_ENEMY_SPACING, MAX_ENEMY_SPACING), launchEnemy2);
 }
 
 function render() {
