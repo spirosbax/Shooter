@@ -1,6 +1,3 @@
-// var audio = document.getElementById("myaudio");
-// audio.volume=0.2;
-
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-demo', {
     preload : preload,
     create : create,
@@ -37,7 +34,7 @@ function preload() {
     game.load.image('starfield', 'assets/starfield.png');
     game.load.image('ship', 'assets/ship.png');
     game.load.image('bullet', 'assets/bullets/bullet.png');
-    game.load.image('enemy2', '/assets/enemies/enemy2.png');
+    game.load.image('enemy2', 'assets/enemies/enemy2.png');
     game.load.spritesheet('explosion', 'assets/explode.png', 128, 128);
 
     game.load.audio('background', 'assets/audio/Wice_StarFighter.mp3');
@@ -168,7 +165,6 @@ function launchEnemy2() {
 
     //  Send another enemy soon
     enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(MIN_ENEMY_SPACING, MAX_ENEMY_SPACING), launchEnemy2);
-    enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(MIN_ENEMY_SPACING, MAX_ENEMY_SPACING), launchEnemy2);
 }
 
 function addEnemyEmitterTrail(enemy) {
@@ -265,8 +261,6 @@ function update() {
         }
         player.kill();
     }
-
-    enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(MIN_ENEMY_SPACING, MAX_ENEMY_SPACING), launchEnemy2);
 }
 
 function render() {
@@ -342,6 +336,9 @@ function restart () {
     game.time.events.remove(enemy2LaunchTimer);
     game.time.events.add(1000, launchEnemy2);
 
+    //  Hide the text
+    gameOver.visible = false;
+
     //  Revive the player
     player.revive();
     player.health = 100;
@@ -350,7 +347,5 @@ function restart () {
     player.alive = true;
     stats.render();
 
-    //  Hide the text
-    gameOver.visible = false;
 
 }

@@ -28,8 +28,8 @@ function preload() {
 
     // We need this because the assets are on github pages
     // Remove the next 2 lines if running locally
-    game.load.baseURL = 'https://spirosbax.github.io/Shooter/';
-    game.load.crossOrigin = 'anonymous';
+    // game.load.baseURL = 'https://spirosbax.github.io/Shooter/';
+    // game.load.crossOrigin = 'anonymous';
 
     game.load.image('starfield', 'assets/starfield.png');
     game.load.image('ship', 'assets/ship.png');
@@ -164,7 +164,6 @@ function launchEnemy2() {
     }
 
     //  Send another enemy soon
-    enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(MIN_ENEMY_SPACING, MAX_ENEMY_SPACING), launchEnemy2);
     enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(MIN_ENEMY_SPACING, MAX_ENEMY_SPACING), launchEnemy2);
 }
 
@@ -337,6 +336,9 @@ function restart () {
     game.time.events.remove(enemy2LaunchTimer);
     game.time.events.add(1000, launchEnemy2);
 
+    //  Hide the text
+    gameOver.visible = false;
+
     //  Revive the player
     player.revive();
     player.health = 100;
@@ -345,7 +347,5 @@ function restart () {
     player.alive = true;
     stats.render();
 
-    //  Hide the text
-    gameOver.visible = false;
 
 }
