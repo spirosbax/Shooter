@@ -1,6 +1,3 @@
-// var audio = document.getElementById("myaudio");
-// audio.volume=0.2;
-
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-demo', {
     preload : preload,
     create : create,
