@@ -8,6 +8,9 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-demo', {
 var explosions;
 var player;
 var enemy2;
+var enemy2LaunchTimer;
+var enemy3;
+var enemy3LaunchTimer;
 var starfield;
 var cursors;
 var bank;
@@ -28,19 +31,20 @@ function preload() {
 
     // We need this because the assets are on github pages
     // Remove the next 2 lines if running locally
-    // game.load.baseURL = 'https://spirosbax.github.io/Shooter/';
-    // game.load.crossOrigin = 'anonymous';
+    //game.load.baseURL = 'https://spirosbax.github.io/Shooter/';
+    //game.load.crossOrigin = 'anonymous';
 
-    game.load.image('starfield', 'assets/starfield.png');
-    game.load.image('ship', 'assets/ship.png');
-    game.load.image('bullet', 'assets/bullets/bullet.png');
-    game.load.image('enemy2', 'assets/enemies/enemy2.png');
-    game.load.spritesheet('explosion', 'assets/explode.png', 128, 128);
+    game.load.image('starfield', './assets/starfield.png');
+    game.load.image('ship', './assets/ship.png');
+    game.load.image('bullet', './assets/bullets/bullet.png');
+    game.load.image('enemy2', './assets/enemies/enemy2.png');
+    game.load.image('enemy3', './assets/enemies/enemy3.png');
+    game.load.spritesheet('explosion', './assets/explode.png', 128, 128);
 
-    game.load.audio('background', 'assets/audio/Wice_StarFighter.mp3');
-    game.load.audio('shoot', 'assets/audio/EnemyShoot.wav');
-    game.load.audio('collide', 'assets/audio/Explosion.wav');
-    game.load.audio('hit', 'assets/audio/EnemyDamage.wav');
+    game.load.audio('background', './assets/audio/Wice_StarFighter.mp3');
+    game.load.audio('shoot', './assets/audio/EnemyShoot.wav');
+    game.load.audio('collide', './assets/audio/Explosion.wav');
+    game.load.audio('hit', './assets/audio/EnemyDamage.wav');
 }
 
 function create() {
@@ -109,6 +113,26 @@ function create() {
             enemy.damageAmount = 20;
         });
     });
+    game.time.events.add(1000, launchEnemy2);
+
+    // The baddies!
+    enemy3 = game.add.group();
+    enemy3.enableBody = true;
+    enemy3.physicsBodyType = Phaser.Physics.ARCADE;
+    enemy3.createMultiple(30, 'enemy3');
+    enemy3.setAll('anchor.x', 0.5);
+    enemy3.setAll('anchor.y', 0.5);
+    enemy3.setAll('scale.x', 0.5);
+    enemy3.setAll('scale.y', 0.5);
+    // enemy3.setAll('angle', 180);
+    enemy3.forEach(function(enemy){
+        addEnemyEmitterTrail(enemy);
+        enemy.events.onKilled.add(function(){
+            enemy.trail.kill();
+            enemy.damageAmount = 20;
+        });
+    });
+    game.time.events.add(1000, launchEnemy3);
 
     //  An explosion pool
     explosions = game.add.group();
@@ -130,8 +154,6 @@ function create() {
         shipHp.text = 'ShipHp: ' + Math.max(player.health, 0) +'%';
         score.text = 'Score: ' + Math.max(player.score, 0);
     };
-
-    game.time.events.add(1000, launchEnemy2);
 
     //  Game over text
     gameOver = game.add.text(game.world.centerX, game.world.centerY, 'GAME OVER!', { font: '84px Arial', fill: '#fff' });
@@ -165,6 +187,45 @@ function launchEnemy2() {
 
     //  Send another enemy soon
     enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(MIN_ENEMY_SPACING, MAX_ENEMY_SPACING), launchEnemy2);
+}
+
+function launchEnemy3() {
+    var startingX = game.rnd.integerInRange(100, game.width - 100);
+    var verticalSpeed = 180;
+    var spread = 60;
+    var frequency = 70;
+    var verticalSpacing = 70;
+    var numEnemiesInWave = 5;
+    var timeBetweenWaves = 7000;
+
+    //  Launch wave
+    for (var i =0; i < numEnemiesInWave; i++) {
+        var enemy = enemy3.getFirstExists(false);
+        if (enemy) {
+            enemy.startingX = startingX;
+            enemy.reset(game.width / 2, -verticalSpacing * i);
+            enemy.body.velocity.y = verticalSpeed;
+
+            //  Update function for each enemy
+            enemy.update = function(){
+              //  Wave movement
+              this.body.x = this.startingX + Math.sin((this.y) / frequency) * spread;
+
+              //  Squish and rotate ship for illusion of "banking"
+              bank = Math.cos((this.y + 60) / frequency)
+              this.scale.x = 0.5 - Math.abs(bank) / 8;
+              this.angle = - bank * 2;
+
+              //  Kill enemies once they go off screen
+              if (this.y > game.height + 200) {
+                this.kill();
+              }
+            };
+        }
+    }
+
+    //  Send another wave soon
+    enemy3LaunchTimer = game.time.events.add(timeBetweenWaves, launchEnemy3);
 }
 
 function addEnemyEmitterTrail(enemy) {
@@ -227,6 +288,9 @@ function update() {
     //  Check collisions
     game.physics.arcade.overlap(player, enemy2, shipCollide, null, this);
     game.physics.arcade.overlap(enemy2, bullets, bulletCollide, null, this);
+
+    game.physics.arcade.overlap(player, enemy3, shipCollide, null, this);
+    game.physics.arcade.overlap(enemy3, bullets, bulletCollide, null, this);
 
     //  Move ship towards mouse pointer
     if (game.input.y < game.width - 20 &&
