@@ -29,10 +29,10 @@ var ENEMY_SPEED = 300;
 
 function preload() {
 
-    // We need this because the assets are on github pages
+   //We need this because the assets are on github pages
     // Remove the next 2 lines if running locally
-    game.load.baseURL = 'https://spirosbax.github.io/Shooter/';
-    game.load.crossOrigin = 'anonymous';
+    //game.load.baseURL = 'https://spirosbax.github.io/Shooter/';
+   // game.load.crossOrigin = 'anonymous';
 
     game.load.image('starfield', './assets/starfield.png');
     game.load.image('ship', './assets/ship.png');
