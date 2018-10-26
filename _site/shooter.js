@@ -41,6 +41,8 @@ function preload() {
     game.load.image('enemy3', './assets/enemies/enemy3.png');
     game.load.spritesheet('explosion', './assets/explode.png', 128, 128);
 
+    game.load.bitmapFont('font', '/assets/font/font.png', '/assets/font/font.xml');
+
     game.load.audio('background', './assets/audio/Wice_StarFighter.mp3');
     game.load.audio('shoot', './assets/audio/EnemyShoot.wav');
     game.load.audio('collide', './assets/audio/Explosion.wav');
@@ -49,7 +51,7 @@ function preload() {
 
 function create() {
     // start background music
-    game.add.audio("background", volume=0.2, loop=true).play();
+    game.add.audio("background", 0.05, loop=true).play();
 
     game.scale.pageAlignHorizontally = true;
 
@@ -124,7 +126,7 @@ function create() {
     enemy3.setAll('anchor.y', 0.5);
     enemy3.setAll('scale.x', 0.5);
     enemy3.setAll('scale.y', 0.5);
-    // enemy3.setAll('angle', 180);
+    enemy3.setAll('angle', 180);
     enemy3.forEach(function(enemy){
         addEnemyEmitterTrail(enemy);
         enemy.events.onKilled.add(function(){
@@ -146,17 +148,17 @@ function create() {
     });
 
     //  Shields stat
-    shields = game.add.text(game.world.width - 150, 10, '', { font: '20px Arial', fill: '#fff' });
-    shipHp = game.add.text(game.world.width - 320, 10, '', { font: '20px Arial', fill: '#fff' });
-    score = game.add.text(game.world.width - 450, 10, '', { font: '20px Arial', fill: '#fff' });
+    shields = game.add.bitmapText(game.world.width - 200, 10, 'font', '');
+    shipHp = game.add.bitmapText(game.world.width - 400, 10, 'font', '');
+    score = game.add.bitmapText(game.world.width - 600, 10, 'font', '');
     statsRender = function () {
         shields.text = 'Shields: ' + Math.max(player.shields, 0) +'%';
-        shipHp.text = 'ShipHp: ' + Math.max(player.health, 0) +'%';
+        shipHp.text = 'HP: ' + Math.max(player.health, 0);
         score.text = 'Score: ' + Math.max(player.score, 0);
     };
 
     //  Game over text
-    gameOver = game.add.text(game.world.centerX, game.world.centerY, 'GAME OVER!', { font: '84px Arial', fill: '#fff' });
+    gameOver = game.add.bitmapText(game.world.centerX, game.world.centerY, 'font', 'GAME OVER!');
     gameOver.anchor.setTo(0.5, 0.5);
     gameOver.visible = false;
 }
@@ -190,11 +192,11 @@ function launchEnemy2() {
 }
 
 function launchEnemy3() {
-    var startingX = game.rnd.integerInRange(100, game.width - 100);
-    var verticalSpeed = 180;
+    var startingY = game.rnd.integerInRange(100, game.height - 100);
+    var horizontalSpeed = 180;
     var spread = 60;
     var frequency = 70;
-    var verticalSpacing = 70;
+    var horizontalSpacing = 70;
     var numEnemiesInWave = 5;
     var timeBetweenWaves = 7000;
 
@@ -202,22 +204,22 @@ function launchEnemy3() {
     for (var i =0; i < numEnemiesInWave; i++) {
         var enemy = enemy3.getFirstExists(false);
         if (enemy) {
-            enemy.startingX = startingX;
-            enemy.reset(game.width / 2, -verticalSpacing * i);
-            enemy.body.velocity.y = verticalSpeed;
+            enemy.startingY = startingY;
+            enemy.reset(800 + (horizontalSpacing * i), game.height / 2)
+            enemy.body.velocity.x = -horizontalSpeed;
 
             //  Update function for each enemy
             enemy.update = function(){
               //  Wave movement
-              this.body.x = this.startingX + Math.sin((this.y) / frequency) * spread;
+              this.body.y = this.startingY + Math.sin((this.x) / frequency) * spread;
 
               //  Squish and rotate ship for illusion of "banking"
-              bank = Math.cos((this.y + 60) / frequency)
-              this.scale.x = 0.5 - Math.abs(bank) / 8;
+              bank = Math.cos((this.x + 60) / frequency)
+              this.scale.y = 0.5 - Math.abs(bank) / 8;
               this.angle = - bank * 2;
 
               //  Kill enemies once they go off screen
-              if (this.y > game.height + 200) {
+              if (this.y > game.width + 200) {
                 this.kill();
               }
             };
@@ -351,7 +353,7 @@ function fireBullet() {
             bullet.body.velocity.y += player.body.velocity.y;
 
             bulletTimer = game.time.now + BULLET_SPACING;
-            game.add.audio('shoot').play();
+            game.add.audio('shoot', 0.05).play();
 
         }
     }
@@ -375,7 +377,7 @@ function shipCollide(player, enemy) {
     }
     statsRender();
 
-    game.add.audio('collide').play();
+    game.add.audio('collide', 0.05).play();
 }
 
 
@@ -391,7 +393,7 @@ function bulletCollide(enemy, bullet) {
     player.score += 1;
     statsRender();
 
-    game.add.audio('hit').play();
+    game.add.audio('hit', 0.05).play();
 }
 
 function restart () {
