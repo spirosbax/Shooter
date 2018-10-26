@@ -11,6 +11,7 @@ var enemy2;
 var enemy2LaunchTimer;
 var enemy3;
 var enemy3LaunchTimer;
+var enemyBullets;
 var starfield;
 var cursors;
 var bank;
@@ -29,16 +30,17 @@ var ENEMY_SPEED = 300;
 
 function preload() {
 
-    // We need this because the assets are on github pages
+   //We need this because the assets are on github pages
     // Remove the next 2 lines if running locally
     //game.load.baseURL = 'https://spirosbax.github.io/Shooter/';
-    //game.load.crossOrigin = 'anonymous';
+   // game.load.crossOrigin = 'anonymous';
 
     game.load.image('starfield', './assets/starfield.png');
     game.load.image('ship', './assets/ship.png');
     game.load.image('bullet', './assets/bullets/bullet.png');
     game.load.image('enemy2', './assets/enemies/enemy2.png');
     game.load.image('enemy3', './assets/enemies/enemy3.png');
+    game.load.image('enemy3Bullet', '/assets/bullets/blue-enemy-bullet.png');
     game.load.spritesheet('explosion', './assets/explode.png', 128, 128);
 
     game.load.bitmapFont('font', '/assets/font/font.png', '/assets/font/font.xml');
@@ -136,6 +138,21 @@ function create() {
     });
     game.time.events.add(1000, launchEnemy3);
 
+    //  Enemy3 enemy's bullets
+    enemy3Bullet = game.add.group();
+    enemy3Bullet.enableBody = true;
+    enemy3Bullet.physicsBodyType = Phaser.Physics.ARCADE;
+    enemy3Bullet.createMultiple(30, 'enemy3Bullet');
+    enemy3Bullet.callAll('crop', null, {x: 90, y: 0, width: 90, height: 40});
+    enemy3Bullet.setAll('alpha', 0.9);
+    enemy3Bullet.setAll('anchor.x', 0.5);
+    enemy3Bullet.setAll('anchor.y', 0.5);
+    enemy3Bullet.setAll('outOfBoundsKill', true);
+    enemy3Bullet.setAll('checkWorldBounds', true);
+    enemy3Bullet.forEach(function(enemy){
+        enemy.body.setSize(20, 20);
+    });
+
     //  An explosion pool
     explosions = game.add.group();
     explosions.enableBody = true;
@@ -198,7 +215,7 @@ function launchEnemy3() {
     var frequency = 70;
     var horizontalSpacing = 70;
     var numEnemiesInWave = 5;
-    var timeBetweenWaves = 7000;
+    var timeBetweenWaves = 1000;
 
     //  Launch wave
     for (var i =0; i < numEnemiesInWave; i++) {
@@ -208,21 +225,42 @@ function launchEnemy3() {
             enemy.reset(800 + (horizontalSpacing * i), game.height / 2)
             enemy.body.velocity.x = -horizontalSpeed;
 
+            //  Set up firing
+            var bulletSpeed = 400;
+            var firingDelay = 2000;
+            enemy.bullets = 2;
+            enemy.lastShot = 0;
+
             //  Update function for each enemy
             enemy.update = function(){
-              //  Wave movement
-              this.body.y = this.startingY + Math.sin((this.x) / frequency) * spread;
+                //  Wave movement
+                this.body.y = this.startingY + Math.sin((this.x) / frequency) * spread;
 
-              //  Squish and rotate ship for illusion of "banking"
-              bank = Math.cos((this.x + 60) / frequency)
-              this.scale.y = 0.5 - Math.abs(bank) / 8;
-              this.angle = - bank * 2;
+                //  Squish and rotate ship for illusion of "banking"
+                bank = Math.cos((this.x + 60) / frequency)
+                this.scale.y = 0.5 - Math.abs(bank) / 8;
+                this.angle = 180 - bank * 2;
+                					//  Fire
+                enemyBullet = enemy3Bullet.getFirstExists(false);
+                if (enemyBullet &&
+                    this.alive &&
+                    this.bullets &&
+                    this.y > game.width / 8 &&
+                    game.time.now > firingDelay + this.lastShot) {
+                        this.lastShot = game.time.now;
+                        this.bullets--;
+                        enemyBullet.reset(this.x, this.y + this.height / 2);
+                        enemyBullet.damageAmount = this.damageAmount;
+                        var angle = game.physics.arcade.moveToObject(enemyBullet, player, bulletSpeed);
+                        enemyBullet.angle = game.math.radToDeg(angle);
+                    }
 
-              //  Kill enemies once they go off screen
-              if (this.y > game.width + 200) {
-                this.kill();
-              }
-            };
+                //  Kill enemies once they go off screen
+                if (this.y > game.width + 400) {
+                    this.kill();
+                    this.x = -20;
+                }
+            }
         }
     }
 
@@ -293,6 +331,7 @@ function update() {
 
     game.physics.arcade.overlap(player, enemy3, shipCollide, null, this);
     game.physics.arcade.overlap(enemy3, bullets, bulletCollide, null, this);
+    game.physics.arcade.overlap(enemy3Bullet, player, enemyHitsPlayer, null, this);
 
     //  Move ship towards mouse pointer
     if (game.input.y < game.width - 20 &&
@@ -396,11 +435,22 @@ function bulletCollide(enemy, bullet) {
     game.add.audio('hit', 0.05).play();
 }
 
+function enemyHitsPlayer(player, bullet) {
+    var explosion = explosions.getFirstExists(false);
+    explosion.reset(player.body.x + player.body.halfWidth, player.body.y + player.body.halfHeight);
+    explosion.alpha = 0.7;
+    explosion.play('explosion', 30, false, true);
+    bullet.kill();
+    player.damage(bullet.damageAmount);
+    statsRender();
+}
+
 function restart () {
     //  Reset the enemies
     enemy2.callAll('kill');
     game.time.events.remove(enemy2LaunchTimer);
     game.time.events.add(1000, launchEnemy2);
+    enemy3Bullet.callAll('kill');
 
     //  Hide the text
     gameOver.visible = false;
