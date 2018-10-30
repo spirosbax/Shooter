@@ -43,7 +43,7 @@ function preload() {
     game.load.image('enemy3Bullet', '/assets/bullets/blue-enemy-bullet.png');
     game.load.spritesheet('explosion', './assets/explode.png', 128, 128);
 
-    game.load.bitmapFont('font', '/assets/font/font.png', '/assets/font/font.xml');
+    game.load.bitmapFont('font', './assets/font/font.png', '/assets/font/font.xml');
 
     game.load.audio('background', './assets/audio/Wice_StarFighter.mp3');
     game.load.audio('shoot', './assets/audio/EnemyShoot.wav');
