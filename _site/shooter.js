@@ -11,7 +11,6 @@ var enemy2;
 var enemy2LaunchTimer;
 var enemy3;
 var enemy3LaunchTimer;
-var enemyBullets;
 var starfield;
 var cursors;
 var bank;
@@ -19,13 +18,14 @@ var shipTrail;
 var bullets;
 var fireButton;
 var bulletTimer = 0;
+var timeBetweenWaves = 10000;
+var enemy2Spacing = 1000;
+var enemy3Launched = false;
 
 var ACCLERATION = 600;
 var DRAG = 400;
 var MAXSPEED = 400;
 
-var MIN_ENEMY_SPACING = 300;
-var MAX_ENEMY_SPACING = 1000;
 var ENEMY_SPEED = 300;
 
 function preload() {
@@ -40,10 +40,10 @@ function preload() {
     game.load.image('bullet', './assets/bullets/bullet.png');
     game.load.image('enemy2', './assets/enemies/enemy2.png');
     game.load.image('enemy3', './assets/enemies/enemy3.png');
-    game.load.image('enemy3Bullet', '/assets/bullets/blue-enemy-bullet.png');
+    game.load.image('enemy3Bullet', './assets/bullets/blue-enemy-bullet.png');
     game.load.spritesheet('explosion', './assets/explode.png', 128, 128);
 
-    game.load.bitmapFont('font', './assets/font/font.png', '/assets/font/font.xml');
+    game.load.bitmapFont('font', './assets/font/font.png', './assets/font/font.xml');
 
     game.load.audio('background', './assets/audio/Wice_StarFighter.mp3');
     game.load.audio('shoot', './assets/audio/EnemyShoot.wav');
@@ -86,6 +86,22 @@ function create() {
     player.shields = 100;
     player.score = 0;
     player.alive = true;
+    player.damage = function(damageAmount){
+        if(this.shields <= 0){
+            this.health -= damageAmount;
+        }else{
+            if (damageAmount > this.shields){
+                var remainder = damageAmount - this.shields
+                this.shields = 0
+                this.health -= remainder
+            }else{
+                this.shields -= damageAmount
+            }
+        }
+        if(this.health <= 0){
+            this.alive = false;
+        }
+    }
 
     //  And some controls to play the game with
     cursors = game.input.keyboard.createCursorKeys();
@@ -112,9 +128,9 @@ function create() {
     enemy2.setAll('anchor.y', 0.5);
     enemy2.forEach(function(enemy){
         addEnemyEmitterTrail(enemy);
+        enemy.damageAmount = 30;
         enemy.events.onKilled.add(function(){
             enemy.trail.kill();
-            enemy.damageAmount = 20;
         });
     });
     game.time.events.add(1000, launchEnemy2);
@@ -128,15 +144,15 @@ function create() {
     enemy3.setAll('anchor.y', 0.5);
     enemy3.setAll('scale.x', 0.5);
     enemy3.setAll('scale.y', 0.5);
-    enemy3.setAll('angle', 180);
+	enemy3.setAll('angle', 180);
     enemy3.forEach(function(enemy){
         addEnemyEmitterTrail(enemy);
+        enemy.damageAmount = 10;
         enemy.events.onKilled.add(function(){
             enemy.trail.kill();
-            enemy.damageAmount = 20;
         });
     });
-    game.time.events.add(1000, launchEnemy3);
+    // game.time.events.add(1000, launchEnemy3);
 
     //  Enemy3 enemy's bullets
     enemy3Bullet = game.add.group();
@@ -149,8 +165,9 @@ function create() {
     enemy3Bullet.setAll('anchor.y', 0.5);
     enemy3Bullet.setAll('outOfBoundsKill', true);
     enemy3Bullet.setAll('checkWorldBounds', true);
-    enemy3Bullet.forEach(function(enemy){
-        enemy.body.setSize(20, 20);
+    enemy3Bullet.forEach(function(bullet){
+        bullet.damageAmount = 20;
+        bullet.body.setSize(20, 20);
     });
 
     //  An explosion pool
@@ -181,6 +198,9 @@ function create() {
 }
 
 function launchEnemy2() {
+    // var MIN_ENEMY_SPACING = 300;
+    // var MAX_ENEMY_SPACING = 1000;
+
     var enemy = enemy2.getFirstExists(false);
     if (enemy) {
         enemy.reset(800, game.rnd.integerInRange(player.world.y - 100, player.world.y + 100));
@@ -205,7 +225,8 @@ function launchEnemy2() {
     }
 
     //  Send another enemy soon
-    enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(MIN_ENEMY_SPACING, MAX_ENEMY_SPACING), launchEnemy2);
+    // enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(MIN_ENEMY_SPACING, MAX_ENEMY_SPACING), launchEnemy2);
+    enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(enemy2Spacing, enemy2Spacing + 1000), launchEnemy2);
 }
 
 function launchEnemy3() {
@@ -214,8 +235,7 @@ function launchEnemy3() {
     var spread = 60;
     var frequency = 70;
     var horizontalSpacing = 70;
-    var numEnemiesInWave = 5;
-    var timeBetweenWaves = 1000;
+    var numEnemiesInWave = 3;
 
     //  Launch wave
     for (var i =0; i < numEnemiesInWave; i++) {
@@ -250,7 +270,6 @@ function launchEnemy3() {
                         this.lastShot = game.time.now;
                         this.bullets--;
                         enemyBullet.reset(this.x, this.y + this.height / 2);
-                        enemyBullet.damageAmount = this.damageAmount;
                         var angle = game.physics.arcade.moveToObject(enemyBullet, player, bulletSpeed);
                         enemyBullet.angle = game.math.radToDeg(angle);
                     }
@@ -265,7 +284,8 @@ function launchEnemy3() {
     }
 
     //  Send another wave soon
-    enemy3LaunchTimer = game.time.events.add(timeBetweenWaves, launchEnemy3);
+    // enemy3LaunchTimer = game.time.events.add(timeBetweenWaves, launchEnemy3);
+    enemy3LaunchTimer = game.time.events.add(game.rnd.integerInRange(timeBetweenWaves, timeBetweenWaves + 4000), launchEnemy3);
 }
 
 function addEnemyEmitterTrail(enemy) {
@@ -277,6 +297,7 @@ function addEnemyEmitterTrail(enemy) {
     enemyTrail.setAlpha(0.4, 0, 800);
     enemyTrail.setScale(0.01, 0.1, 0.01, 0.1, 1000, Phaser.Easing.Quintic.Out);
     enemy.trail = enemyTrail;
+
 }
 
 function update() {
@@ -331,7 +352,7 @@ function update() {
 
     game.physics.arcade.overlap(player, enemy3, shipCollide, null, this);
     game.physics.arcade.overlap(enemy3, bullets, bulletCollide, null, this);
-    game.physics.arcade.overlap(enemy3Bullet, player, enemyHitsPlayer, null, this);
+    game.physics.arcade.overlap(player, enemy3Bullet, enemyHitsPlayer, null, this);
 
     //  Move ship towards mouse pointer
     if (game.input.y < game.width - 20 &&
@@ -404,18 +425,10 @@ function shipCollide(player, enemy) {
     explosion.body.velocity.y = enemy.body.velocity.y;
     explosion.alpha = 0.7;
     explosion.play('explosion', 30, false, true);
+
+    player.damage(enemy.damageAmount);
     enemy.kill();
-
-    if(player.shields == 0){
-        player.health -= 20;
-    }else{
-        player.shields -= 50;
-    }
-    if(player.health == 0){
-        player.alive = false;
-    }
     statsRender();
-
     game.add.audio('collide', 0.05).play();
 }
 
@@ -433,6 +446,23 @@ function bulletCollide(enemy, bullet) {
     statsRender();
 
     game.add.audio('hit', 0.05).play();
+
+    //  Pacing
+    var scoreThreshold = 5
+    //  Enemies come quicker as score increases
+    enemy2Spacing *= 0.9;
+    //  Blue enemies come in after a score of 1000
+    if (!enemy3Launched && player.score >= scoreThreshold) {
+        console.log("LAUNCH ENEMY3")
+        // update time between waves
+        launchEnemy3();
+        enemy3Launched = true;
+        //  Slow green enemies down now that there are other enemies
+        enemy2Spacing *= 2;
+    }else if(enemy3Launched){
+        //accelerate rate of enemy3 launches
+        timeBetweenWaves *= 0.5
+    }
 }
 
 function enemyHitsPlayer(player, bullet) {
@@ -440,8 +470,9 @@ function enemyHitsPlayer(player, bullet) {
     explosion.reset(player.body.x + player.body.halfWidth, player.body.y + player.body.halfHeight);
     explosion.alpha = 0.7;
     explosion.play('explosion', 30, false, true);
-    bullet.kill();
+
     player.damage(bullet.damageAmount);
+    bullet.kill();
     statsRender();
 }
 
@@ -450,7 +481,13 @@ function restart () {
     enemy2.callAll('kill');
     game.time.events.remove(enemy2LaunchTimer);
     game.time.events.add(1000, launchEnemy2);
+    enemy3.callAll('kill');
+    game.time.events.remove(enemy3LaunchTimer);
     enemy3Bullet.callAll('kill');
+
+    //  Reset pacing
+    enemy2Spacing = 1000;
+    enemy3Launched = false
 
     //  Hide the text
     gameOver.visible = false;
@@ -461,7 +498,7 @@ function restart () {
     player.shields = 50;
     player.score = 0;
     player.alive = true;
-    stats.render();
+    statsRender();
 
 
 }
