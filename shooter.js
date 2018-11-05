@@ -11,6 +11,7 @@ var enemy2;
 var enemy2LaunchTimer;
 var enemy3;
 var enemy3LaunchTimer;
+var healthHeal;
 var starfield;
 var cursors;
 var bank;
@@ -42,6 +43,7 @@ function preload() {
     game.load.image('enemy3', './assets/enemies/enemy3.png');
     game.load.image('enemy3Bullet', './assets/bullets/blue-enemy-bullet.png');
     game.load.spritesheet('explosion', './assets/explode.png', 128, 128);
+    game.load.image('upgrade1', './assets/upgrades/upgrade1.png');
 
     game.load.bitmapFont('font', './assets/font/font.png', './assets/font/font.xml');
 
@@ -49,6 +51,7 @@ function preload() {
     game.load.audio('shoot', './assets/audio/EnemyShoot.wav');
     game.load.audio('collide', './assets/audio/Explosion.wav');
     game.load.audio('hit', './assets/audio/EnemyDamage.wav');
+    game.load.audio('healthUp', './assets/audio/Pick_Up_Health.wav');
 }
 
 function create() {
@@ -60,15 +63,9 @@ function create() {
     //  The scrolling starfield background
     starfield = game.add.tileSprite(0, 0, 800, 600, 'starfield');
 
-    //  Our bullet group
-    bullets = game.add.group();
-    bullets.enableBody = true;
-    bullets.physicsBodyType = Phaser.Physics.ARCADE;
-    bullets.createMultiple(30, 'bullet');
-    bullets.setAll('anchor.x', 0.5);
-    bullets.setAll('anchor.y', 1);
-    bullets.setAll('outOfBoundsKill', true);
-    bullets.setAll('checkWorldBounds', true);
+    //  And some controls to play the game with
+    cursors = game.input.keyboard.createCursorKeys();
+    fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
     //  The hero!
     player = game.add.sprite(100, game.height / 2, 'ship');
@@ -103,9 +100,15 @@ function create() {
         }
     }
 
-    //  And some controls to play the game with
-    cursors = game.input.keyboard.createCursorKeys();
-    fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+    //  Our bullet group
+    bullets = game.add.group();
+    bullets.enableBody = true;
+    bullets.physicsBodyType = Phaser.Physics.ARCADE;
+    bullets.createMultiple(30, 'bullet');
+    bullets.setAll('anchor.x', 0.5);
+    bullets.setAll('anchor.y', 1);
+    bullets.setAll('outOfBoundsKill', true);
+    bullets.setAll('checkWorldBounds', true);
 
     //  Add an emitter for the ship's trail
     shipTrail = game.add.emitter(player.x - 20, player.y, 400);
@@ -195,6 +198,27 @@ function create() {
     gameOver = game.add.bitmapText(game.world.centerX, game.world.centerY, 'font', 'GAME OVER!');
     gameOver.anchor.setTo(0.5, 0.5);
     gameOver.visible = false;
+
+   // healthHeal = game.add.group();
+}
+
+function launchUpgrade1() {
+    healthHeal = game.add.sprite(game.width, game.height / 2, 'upgrade1');
+    healthHeal.scale.setTo(.01)
+
+    healthHeal.enableBody = true;
+    game.physics.enable(healthHeal, Phaser.Physics.ARCADE);
+
+    healthHeal.body.velocity.x = -ENEMY_SPEED;
+    healthHeal.body.velocity.y = game.rnd.integerInRange(0,-100);
+
+    //  Kill upgrades once they go off screen
+    if (healthHeal.y > game.height ) {
+        healthHeal.kill();
+    }
+
+    //  Send another healthHeal soon
+    // upgrade1LaunchTimer = game.time.events.add(game.rnd.integerInRange(0, 5000), launchUpgrade1);
 }
 
 function launchEnemy2() {
@@ -342,6 +366,7 @@ function update() {
         fireBullet();
     }
 
+
     //  Keep the shipTrail lined up with the ship
     shipTrail.y = player.y;
     shipTrail.x = player.x - 20;
@@ -349,6 +374,8 @@ function update() {
     //  Check collisions
     game.physics.arcade.overlap(player, enemy2, shipCollide, null, this);
     game.physics.arcade.overlap(enemy2, bullets, bulletCollide, null, this);
+
+    game.physics.arcade.overlap(player, healthHeal, gotHealth, null, this);
 
     game.physics.arcade.overlap(player, enemy3, shipCollide, null, this);
     game.physics.arcade.overlap(enemy3, bullets, bulletCollide, null, this);
@@ -444,6 +471,9 @@ function bulletCollide(enemy, bullet) {
 
     player.score += 1;
     statsRender();
+    if (player.score % 5 == 0) {
+        game.time.events.add(5000, launchUpgrade1);
+    }
 
     game.add.audio('hit', 0.05).play();
 
@@ -476,11 +506,19 @@ function enemyHitsPlayer(player, bullet) {
     statsRender();
 }
 
+function gotHealth(player, healthHeal){
+    healthHeal.kill()
+    player.health = 100
+    game.add.audio('healthUp', 0.05).play();
+    console.log("GOT healthHeal")
+}
+
 function restart () {
     //  Reset the enemies
     enemy2.callAll('kill');
     game.time.events.remove(enemy2LaunchTimer);
     game.time.events.add(1000, launchEnemy2);
+    game.time.events.add(1000, launchUpgrade1);
     enemy3.callAll('kill');
     game.time.events.remove(enemy3LaunchTimer);
     enemy3Bullet.callAll('kill');
