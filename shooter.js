@@ -126,7 +126,7 @@ function create() {
     enemy2 = game.add.group();
     enemy2.enableBody = true;
     enemy2.physicsBodyType = Phaser.Physics.ARCADE;
-    enemy2.createMultiple(3, 'enemy2');
+    enemy2.createMultiple(5, 'enemy2');
     enemy2.setAll('anchor.x', 0.5);
     enemy2.setAll('anchor.y', 0.5);
     enemy2.forEach(function(enemy){
@@ -246,6 +246,18 @@ function launchEnemy2() {
         if (enemy.y > game.height ) {
             enemy.kill();
       }
+    }else{
+        console.log("No enemies left")
+        // enemy2.createMultiple(3, 'enemy2');
+        // enemy2.setAll('anchor.x', 0.5);
+        // enemy2.setAll('anchor.y', 0.5);
+        // enemy2.forEach(function(enemy){
+        //     addEnemyEmitterTrail(enemy);
+        //     enemy.damageAmount = 30;
+        //     enemy.events.onKilled.add(function(){
+        //         enemy.trail.kill();
+        //     });
+        // });
     }
 
     //  Send another enemy soon
@@ -440,7 +452,7 @@ function fireBullet() {
             bullet.body.velocity.y += player.body.velocity.y;
 
             bulletTimer = game.time.now + BULLET_SPACING;
-            game.add.audio('shoot', 0.05).play();
+            game.add.audio('shoot', 0.1).play();
 
         }
     }
