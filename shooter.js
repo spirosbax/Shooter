@@ -11,7 +11,8 @@ var enemy2;
 var enemy2LaunchTimer;
 var enemy3;
 var enemy3LaunchTimer;
-var healthHeal;
+var healthUp;
+var shieldsUp;
 var starfield;
 var cursors;
 var bank;
@@ -43,7 +44,8 @@ function preload() {
     game.load.image('enemy3', './assets/enemies/enemy3.png');
     game.load.image('enemy3Bullet', './assets/bullets/blue-enemy-bullet.png');
     game.load.spritesheet('explosion', './assets/explode.png', 128, 128);
-    game.load.image('upgrade1', './assets/upgrades/upgrade1.png');
+    game.load.image('healthUp', './assets/upgrades/healthUp.png');
+    game.load.image('shieldsUp', './assets/upgrades/shieldsUp.png');
 
     game.load.bitmapFont('font', './assets/font/font.png', './assets/font/font.xml');
 
@@ -51,7 +53,9 @@ function preload() {
     game.load.audio('shoot', './assets/audio/EnemyShoot.wav');
     game.load.audio('collide', './assets/audio/Explosion.wav');
     game.load.audio('hit', './assets/audio/EnemyDamage.wav');
-    game.load.audio('healthUp', './assets/audio/Pick_Up_Health.wav');
+    game.load.audio('healthAudio', './assets/audio/healthUp.wav');
+    game.load.audio('shieldsAudio', './assets/audio/shieldsUp.ogg');
+    game.load.audio('shieldsDownAudio', './assets/audio/shieldsDown.mp3');
 }
 
 function create() {
@@ -199,26 +203,39 @@ function create() {
     gameOver.anchor.setTo(0.5, 0.5);
     gameOver.visible = false;
 
-   // healthHeal = game.add.group();
+   // healthUp = game.add.group();
 }
 
 function launchUpgrade1() {
-    healthHeal = game.add.sprite(game.width, game.height / 2, 'upgrade1');
-    healthHeal.scale.setTo(.01)
+    healthUp = game.add.sprite(game.width, game.rnd.integerInRange(100, game.height-100), 'healthUp');
+    healthUp.scale.setTo(.01)
 
-    healthHeal.enableBody = true;
-    game.physics.enable(healthHeal, Phaser.Physics.ARCADE);
+    healthUp.enableBody = true;
+    game.physics.enable(healthUp, Phaser.Physics.ARCADE);
 
-    healthHeal.body.velocity.x = -ENEMY_SPEED;
-    healthHeal.body.velocity.y = game.rnd.integerInRange(0,-100);
+    healthUp.body.velocity.x = -ENEMY_SPEED;
+    healthUp.body.velocity.y = 0
 
     //  Kill upgrades once they go off screen
-    if (healthHeal.y > game.height ) {
-        healthHeal.kill();
+    if (healthUp.y > game.height ) {
+        healthUp.kill();
     }
+}
 
-    //  Send another healthHeal soon
-    // upgrade1LaunchTimer = game.time.events.add(game.rnd.integerInRange(0, 5000), launchUpgrade1);
+function launchUpgrade2() {
+    shieldsUp = game.add.sprite(game.width, game.rnd.integerInRange(100, game.height-100), 'shieldsUp');
+    shieldsUp.scale.setTo(.01)
+
+    shieldsUp.enableBody = true;
+    game.physics.enable(shieldsUp, Phaser.Physics.ARCADE);
+
+    shieldsUp.body.velocity.x = -ENEMY_SPEED;
+    shieldsUp.body.velocity.y = 0
+
+    //  Kill upgrades once they go off screen
+    if (shieldsUp.y > game.height ) {
+        shieldsUp.kill();
+    }
 }
 
 function launchEnemy2() {
@@ -384,11 +401,15 @@ function update() {
     shipTrail.x = player.x - 20;
 
     //  Check collisions
+    // enemy 2
     game.physics.arcade.overlap(player, enemy2, shipCollide, null, this);
     game.physics.arcade.overlap(enemy2, bullets, bulletCollide, null, this);
 
-    game.physics.arcade.overlap(player, healthHeal, gotHealth, null, this);
+    // upgrades
+    game.physics.arcade.overlap(player, healthUp, playerHeal, null, this);
+    game.physics.arcade.overlap(player, shieldsUp, playerShieldsFix, null, this);
 
+    // enemy 3
     game.physics.arcade.overlap(player, enemy3, shipCollide, null, this);
     game.physics.arcade.overlap(enemy3, bullets, bulletCollide, null, this);
     game.physics.arcade.overlap(player, enemy3Bullet, enemyHitsPlayer, null, this);
@@ -452,7 +473,7 @@ function fireBullet() {
             bullet.body.velocity.y += player.body.velocity.y;
 
             bulletTimer = game.time.now + BULLET_SPACING;
-            game.add.audio('shoot', 0.1).play();
+            game.add.audio('shoot', 0.5).play();
 
         }
     }
@@ -468,11 +489,24 @@ function shipCollide(player, enemy) {
     player.damage(enemy.damageAmount);
     enemy.kill();
     statsRender();
-    game.add.audio('collide', 0.05).play();
+    game.add.audio('collide', 0.5).play();
 }
 
 
 function bulletCollide(enemy, bullet) {
+
+    if (player.score % 5 == 0) {
+        launchUpgrade1()
+    }
+    if (player.score % 15 == 0) {
+        launchUpgrade2()
+    }
+    // if (player.shields == 0) {
+    //     player.shieldDownPlaying = true
+    //     console.log("SHIELDS DOWN")
+    //     game.add.audio('shieldsDownAudio').play();
+    // }
+
     var explosion = explosions.getFirstExists(false);
     explosion.reset(bullet.body.x + bullet.body.halfWidth, bullet.body.y + bullet.body.halfHeight);
     explosion.body.velocity.y = enemy.body.velocity.y;
@@ -483,11 +517,8 @@ function bulletCollide(enemy, bullet) {
 
     player.score += 1;
     statsRender();
-    if (player.score % 5 == 0) {
-        game.time.events.add(5000, launchUpgrade1);
-    }
 
-    game.add.audio('hit', 0.05).play();
+    game.add.audio('hit', 0.2).play();
 
     //  Pacing
     var scoreThreshold = 5
@@ -518,11 +549,18 @@ function enemyHitsPlayer(player, bullet) {
     statsRender();
 }
 
-function gotHealth(player, healthHeal){
-    healthHeal.kill()
+function playerHeal(player, healthUp){
+    healthUp.kill()
     player.health = 100
-    game.add.audio('healthUp', 0.05).play();
-    console.log("GOT healthHeal")
+    game.add.audio('healthAudio',0.5).play();
+    console.log("GOT healthUp")
+}
+
+function playerShieldsFix(player, shieldsUp){
+    shieldsUp.kill()
+    player.shields = 100
+    game.add.audio('shieldsAudio').play();
+    console.log("GOT shields")
 }
 
 function restart () {
