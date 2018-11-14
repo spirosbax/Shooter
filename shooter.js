@@ -18,6 +18,7 @@ var healthUp;
 var shieldsUp;
 var shredingBullet;
 var shredCount = 0
+var bulletRain;
 
 var starfield;
 var cursors;
@@ -36,6 +37,8 @@ var DRAG = 400;
 var MAXSPEED = 400;
 
 var ENEMY_SPEED = 300;
+var BULLET_SPEED = 400;
+var BULLET_SPACING = 250;
 
 function preload() {
 
@@ -59,6 +62,7 @@ function preload() {
     game.load.image('shieldsUp', './assets/upgrades/shieldsUp.png');
     game.load.image('shredingBullet', './assets/upgrades/shredBullet.png');
     game.load.image('tripleBullet', './assets/upgrades/tripleBullet.png');
+    game.load.image('bulletRain', './assets/upgrades/bulletRain.png');
 
     game.load.bitmapFont('font', './assets/font/font.png', './assets/font/font.xml');
 
@@ -98,6 +102,7 @@ function create() {
     });
     player.got_shred = false;
     player.got_triple = false;
+    player.got_rain = false;
     player.health = 100;
     player.shields = 100;
     player.score = 0;
@@ -247,6 +252,11 @@ function create() {
     tripleBullet.enableBody = true;
     tripleBullet.physicsBodyType = Phaser.Physics.ARCADE;
     tripleBullet.createMultiple(1, 'tripleBullet');
+
+    bulletRain = game.add.group();
+    bulletRain.enableBody = true;
+    bulletRain.physicsBodyType = Phaser.Physics.ARCADE;
+    bulletRain.createMultiple(1, 'bulletRain');
 }
 
 function launchUpgrade1() {
@@ -293,6 +303,20 @@ function launchUpgrade3() {
 
 function launchUpgrade4() {
     var upgrade = tripleBullet.getFirstExists(false);
+	if (upgrade) {
+		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
+		upgrade.body.velocity.x = -ENEMY_SPEED;
+		upgrade.body.velocity.y = 0
+		upgrade.body.drag.y = 100;
+
+		if (upgrade.y > game.height ) {
+			upgrade.kill();
+		}
+	}
+}
+
+function launchUpgrade5() {
+    var upgrade = bulletRain.getFirstExists(false);
 	if (upgrade) {
 		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
 		upgrade.body.velocity.x = -ENEMY_SPEED;
@@ -467,6 +491,7 @@ function update() {
     game.physics.arcade.overlap(player, shieldsUp, playerShieldsFix, null, this);
     game.physics.arcade.overlap(player, shredingBullet, playerShredBullet, null, this);
     game.physics.arcade.overlap(player, tripleBullet, playerTripleBullet, null, this);
+    game.physics.arcade.overlap(player, bulletRain, playerBulletRain, null, this);
 
     // enemy 3
     game.physics.arcade.overlap(player, enemy3, shipCollide, null, this); // player with enemy3
@@ -516,12 +541,11 @@ function render() {
 }
 
 function fireBullet() {
+   BULLET_SPACING = player.got_rain ? 50 : BULLET_SPACING
 
     if (!player.got_triple) {
 		//  To avoid them being allowed to fire too fast we set a time limit
 		if (game.time.now > bulletTimer) {
-			var BULLET_SPEED = 400;
-			var BULLET_SPACING = 250;
             var bullet;
             if (player.got_shred){
                 bullet = shredBullet.getFirstExists(false);
@@ -545,10 +569,6 @@ function fireBullet() {
 		}
     }else{
 		if (game.time.now > bulletTimer) {
-			var BULLET_SPEED = 400;
-			var BULLET_SPACING = 550;
-
-
 			for (var i = 0; i < 3; i++) {
 				if (player.got_shred){
 					bullet = shredBullet.getFirstExists(false);
@@ -607,6 +627,10 @@ function bulletCollide(enemy, bullet) {
         if (player.score % 30 == 0) {
             launchUpgrade3()
         }
+
+        if (player.score % 40 == 0) {
+            launchUpgrade5()
+        }
     }
     // if (player.shields == 0) {
     //     player.shieldDownPlaying = true
@@ -649,7 +673,6 @@ function bulletCollide(enemy, bullet) {
         player.got_shred = false
         console.log("Shred end");
     }
-
 }
 
 function enemyHitsPlayer(player, bullet) {
@@ -690,8 +713,15 @@ function playerTripleBullet(player, tripleBullet){
     console.log("GOT triple")
 }
 
+function playerBulletRain(player, bulletRain){
+    bulletRain.kill()
+    player.got_rain = true
+    console.log("GOT rain")
+}
+
 function restart () {
     //  Reset the enemies
+    BULLET_SPACING = 250
     enemy2.callAll('kill');
     enemy3.callAll('kill');
     enemy3Bullet.callAll('kill');
@@ -699,6 +729,7 @@ function restart () {
     shieldsUp.callAll('kill');
     shredBullet.callAll('kill');
     tripleBullet.callAll('kill');
+    bulletRain.callAll('kill');
 
     player.got_shred = false
     player.got_triple = false
