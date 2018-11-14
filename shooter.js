@@ -17,7 +17,6 @@ var enemy3LaunchTimer;
 var healthUp;
 var shieldsUp;
 var shredingBullet;
-var got_shred = false;
 var shredCount = 0
 
 var starfield;
@@ -55,9 +54,11 @@ function preload() {
     game.load.image('enemy3', './assets/enemies/enemy3.png');
     game.load.image('enemy3Bullet', './assets/bullets/blue-enemy-bullet.png');
     game.load.spritesheet('explosion', './assets/explode.png', 128, 128);
+
     game.load.image('healthUp', './assets/upgrades/healthUp.png');
     game.load.image('shieldsUp', './assets/upgrades/shieldsUp.png');
     game.load.image('shredingBullet', './assets/upgrades/shredBullet.png');
+    game.load.image('tripleBullet', './assets/upgrades/tripleBullet.png');
 
     game.load.bitmapFont('font', './assets/font/font.png', './assets/font/font.xml');
 
@@ -95,7 +96,8 @@ function create() {
     player.events.onRevived.add(function(){
         shipTrail.start(false, 5000, 10);
     });
-	player.weaponLevel = 2
+    player.got_shred = false;
+    player.got_triple = false;
     player.health = 100;
     player.shields = 100;
     player.score = 0;
@@ -226,24 +228,25 @@ function create() {
     gameOver.anchor.setTo(0.5, 0.5);
     gameOver.visible = false;
 
-
-    // The baddies!
     healthUp = game.add.group();
     healthUp.enableBody = true;
     healthUp.physicsBodyType = Phaser.Physics.ARCADE;
     healthUp.createMultiple(30, 'healthUp');
 
-    // The baddies!
     shieldsUp = game.add.group();
     shieldsUp.enableBody = true;
     shieldsUp.physicsBodyType = Phaser.Physics.ARCADE;
     shieldsUp.createMultiple(30, 'shieldsUp');
 
-    // The baddies!
     shredingBullet = game.add.group();
     shredingBullet.enableBody = true;
     shredingBullet.physicsBodyType = Phaser.Physics.ARCADE;
     shredingBullet.createMultiple(30, 'shredingBullet');
+
+    tripleBullet = game.add.group();
+    tripleBullet.enableBody = true;
+    tripleBullet.physicsBodyType = Phaser.Physics.ARCADE;
+    tripleBullet.createMultiple(1, 'tripleBullet');
 }
 
 function launchUpgrade1() {
@@ -287,6 +290,22 @@ function launchUpgrade3() {
 		}
 	}
 }
+
+function launchUpgrade4() {
+    var upgrade = tripleBullet.getFirstExists(false);
+	if (upgrade) {
+		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
+		upgrade.body.velocity.x = -ENEMY_SPEED;
+		upgrade.body.velocity.y = 0
+		upgrade.body.drag.y = 100;
+
+		if (upgrade.y > game.height ) {
+			upgrade.kill();
+		}
+	}
+}
+
+
 function launchEnemy2() {
     // var MIN_ENEMY_SPACING = 300;
     // var MAX_ENEMY_SPACING = 1000;
@@ -447,6 +466,7 @@ function update() {
     game.physics.arcade.overlap(player, healthUp, playerHeal, null, this);
     game.physics.arcade.overlap(player, shieldsUp, playerShieldsFix, null, this);
     game.physics.arcade.overlap(player, shredingBullet, playerShredBullet, null, this);
+    game.physics.arcade.overlap(player, tripleBullet, playerTripleBullet, null, this);
 
     // enemy 3
     game.physics.arcade.overlap(player, enemy3, shipCollide, null, this); // player with enemy3
@@ -461,7 +481,7 @@ function update() {
         game.input.y > 20 &&
         game.input.x > 20 &&
         game.input.x < game.height - 20) {
-        var minDist = 150;
+        var minDist = 20;
         var disty = game.input.y - player.y;
         var distx = game.input.x - player.x;
         player.body.velocity.y = MAXSPEED * game.math.clamp(disty / minDist, -1, 1);
@@ -496,20 +516,19 @@ function render() {
 }
 
 function fireBullet() {
-	var bullet;
-	if (got_shred){
-		bullet = shredBullet.getFirstExists(false);
-		shredCount--
-	}else{
-		bullet = bullets.getFirstExists(false);
-	}
 
-    switch (player.weaponLevel) {
-		case 1:
+    if (!player.got_triple) {
 		//  To avoid them being allowed to fire too fast we set a time limit
 		if (game.time.now > bulletTimer) {
 			var BULLET_SPEED = 400;
 			var BULLET_SPACING = 250;
+            var bullet;
+            if (player.got_shred){
+                bullet = shredBullet.getFirstExists(false);
+                shredCount--
+            }else{
+                bullet = bullets.getFirstExists(false);
+            }
 			if (bullet) {
 				//  And fire it
 				//  Make bullet come out of tip of ship with right angle
@@ -521,21 +540,17 @@ function fireBullet() {
 
 				bulletTimer = game.time.now + BULLET_SPACING;
 
-				var audio = new Audio('assets/shoot.wav');
-				audio.play()
-				audio.volume=0.2
+ 			    game.add.audio('shoot', 0.5).play();
 			}
 		}
-		break;
-
-		case 2:
+    }else{
 		if (game.time.now > bulletTimer) {
 			var BULLET_SPEED = 400;
 			var BULLET_SPACING = 550;
 
 
 			for (var i = 0; i < 3; i++) {
-				if (got_shred){
+				if (player.got_shred){
 					bullet = shredBullet.getFirstExists(false);
 					shredCount--
 				}else{
@@ -583,7 +598,13 @@ function bulletCollide(enemy, bullet) {
         if (player.score % 10 == 0) {
             launchUpgrade2()
         }
-        if (player.score % 15 == 0) {
+        if (player.score % 20 == 0) {
+            if (!player.got_triple) {
+                launchUpgrade4()
+            }
+        }
+
+        if (player.score % 30 == 0) {
             launchUpgrade3()
         }
     }
@@ -599,7 +620,7 @@ function bulletCollide(enemy, bullet) {
     explosion.alpha = 0.7;
     explosion.play('explosion', 30, false, true);
     enemy.kill();
-    if (!got_shred) {
+    if (!player.got_shred) {
         bullet.kill();
     }
 
@@ -624,8 +645,8 @@ function bulletCollide(enemy, bullet) {
         //accelerate rate of enemy3 launches
         timeBetweenWaves *= 0.5
     }
-    if ((shredCount <= 0) && (got_shred)) {
-        got_shred = false
+    if ((shredCount <= 0) && (player.got_shred)) {
+        player.got_shred = false
         console.log("Shred end");
     }
 
@@ -658,9 +679,15 @@ function playerShieldsFix(player, shieldsUp){
 
 function playerShredBullet(player, shredBullet){
     shredBullet.kill()
-    got_shred = true
-    shredCount = 50
+    player.got_shred = true
+    shredCount = 40
     console.log("GOT shred")
+}
+
+function playerTripleBullet(player, tripleBullet){
+    tripleBullet.kill()
+    player.got_triple = true
+    console.log("GOT triple")
 }
 
 function restart () {
@@ -668,13 +695,13 @@ function restart () {
     enemy2.callAll('kill');
     enemy3.callAll('kill');
     enemy3Bullet.callAll('kill');
-    if (!(typeof(healthUp) === undefined)) {
-        healthUp.kill()
-    }
-    if (!(typeof(shieldsUp) === undefined)) {
-        shieldsUp.kill()
-    }
-    got_shred = false
+    healthUp.callAll('kill');
+    shieldsUp.callAll('kill');
+    shredBullet.callAll('kill');
+    tripleBullet.callAll('kill');
+
+    player.got_shred = false
+    player.got_triple = false
     shredCount = 0
 
     game.time.events.remove(enemy2LaunchTimer);
