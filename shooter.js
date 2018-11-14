@@ -57,7 +57,7 @@ function preload() {
     game.load.spritesheet('explosion', './assets/explode.png', 128, 128);
     game.load.image('healthUp', './assets/upgrades/healthUp.png');
     game.load.image('shieldsUp', './assets/upgrades/shieldsUp.png');
-    game.load.image('shredingBullet', './assets/upgrades/cirlce.png');
+    game.load.image('shredingBullet', './assets/upgrades/shredBullet.png');
 
     game.load.bitmapFont('font', './assets/font/font.png', './assets/font/font.xml');
 
@@ -67,7 +67,7 @@ function preload() {
     game.load.audio('hit', './assets/audio/EnemyDamage.wav');
     game.load.audio('healthAudio', './assets/audio/healthUp.wav');
     game.load.audio('shieldsAudio', './assets/audio/shieldsUp.ogg');
-    game.load.audio('shieldsDownAudio', './assets/audio/shieldsDown.mp3');
+    // game.load.audio('shieldsDownAudio', './assets/audio/shieldsDown.mp3');
 }
 
 function create() {
@@ -95,6 +95,7 @@ function create() {
     player.events.onRevived.add(function(){
         shipTrail.start(false, 5000, 10);
     });
+	player.weaponLevel = 2
     player.health = 100;
     player.shields = 100;
     player.score = 0;
@@ -224,54 +225,67 @@ function create() {
     gameOver = game.add.bitmapText(game.world.centerX, game.world.centerY, 'font', 'GAME OVER!');
     gameOver.anchor.setTo(0.5, 0.5);
     gameOver.visible = false;
+
+
+    // The baddies!
+    healthUp = game.add.group();
+    healthUp.enableBody = true;
+    healthUp.physicsBodyType = Phaser.Physics.ARCADE;
+    healthUp.createMultiple(30, 'healthUp');
+
+    // The baddies!
+    shieldsUp = game.add.group();
+    shieldsUp.enableBody = true;
+    shieldsUp.physicsBodyType = Phaser.Physics.ARCADE;
+    shieldsUp.createMultiple(30, 'shieldsUp');
+
+    // The baddies!
+    shredingBullet = game.add.group();
+    shredingBullet.enableBody = true;
+    shredingBullet.physicsBodyType = Phaser.Physics.ARCADE;
+    shredingBullet.createMultiple(30, 'shredingBullet');
 }
 
 function launchUpgrade1() {
-    healthUp = game.add.sprite(game.width, game.rnd.integerInRange(100, game.height-100), 'healthUp');
-    healthUp.scale.setTo(.01)
+    var upgrade = healthUp.getFirstExists(false);
+	if (upgrade) {
+		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
+		upgrade.body.velocity.x = -ENEMY_SPEED;
+		upgrade.body.velocity.y = 0
+		upgrade.body.drag.y = 100;
 
-    healthUp.enableBody = true;
-    game.physics.enable(healthUp, Phaser.Physics.ARCADE);
-
-    healthUp.body.velocity.x = -ENEMY_SPEED;
-    healthUp.body.velocity.y = 0
-
-    //  Kill upgrades once they go off screen
-    if (healthUp.y > game.height ) {
-        healthUp.kill();
-    }
+		if (upgrade.y > game.height ) {
+			upgrade.kill();
+		}
+	}
 }
 
 function launchUpgrade2() {
-    shieldsUp = game.add.sprite(game.width, game.rnd.integerInRange(100, game.height-100), 'shieldsUp');
-    shieldsUp.scale.setTo(.01)
+    var upgrade = shieldsUp.getFirstExists(false);
+	if (upgrade) {
+		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
+		upgrade.body.velocity.x = -ENEMY_SPEED;
+		upgrade.body.velocity.y = 0
+		upgrade.body.drag.y = 100;
 
-    shieldsUp.enableBody = true;
-    game.physics.enable(shieldsUp, Phaser.Physics.ARCADE);
-
-    shieldsUp.body.velocity.x = -ENEMY_SPEED;
-    shieldsUp.body.velocity.y = 0
-
-    //  Kill upgrades once they go off screen
-    if (shieldsUp.y > game.height ) {
-        shieldsUp.kill();
-    }
+		if (upgrade.y > game.height ) {
+			upgrade.kill();
+		}
+	}
 }
 
 function launchUpgrade3() {
-    shredingBullet = game.add.sprite(game.width, game.rnd.integerInRange(100, game.height-100), 'shredingBullet');
-    shredingBullet.scale.setTo(.1)
+    var upgrade = shredingBullet.getFirstExists(false);
+	if (upgrade) {
+		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
+		upgrade.body.velocity.x = -ENEMY_SPEED;
+		upgrade.body.velocity.y = 0
+		upgrade.body.drag.y = 100;
 
-    shredingBullet.enableBody = true;
-    game.physics.enable(shredingBullet, Phaser.Physics.ARCADE);
-
-    shredingBullet.body.velocity.x = -ENEMY_SPEED;
-    shredingBullet.body.velocity.y = 0
-
-    //  Kill upgrades once they go off screen
-    if (shredingBullet.y > game.height ) {
-        shredingBullet.kill();
-    }
+		if (upgrade.y > game.height ) {
+			upgrade.kill();
+		}
+	}
 }
 function launchEnemy2() {
     // var MIN_ENEMY_SPACING = 300;
@@ -482,35 +496,68 @@ function render() {
 }
 
 function fireBullet() {
-    //  To avoid them being allowed to fire too fast we set a time limit
-    if (game.time.now > bulletTimer) {
-        var BULLET_SPEED = 400;
-        var BULLET_SPACING = 250;
-        //  Grab the first bullet we can from the pool
-        var bullet;
-        if (got_shred){
-            bullet = shredBullet.getFirstExists(false);
-            shredCount--
-        }else{
-            bullet = bullets.getFirstExists(false);
-        }
+	var bullet;
+	if (got_shred){
+		bullet = shredBullet.getFirstExists(false);
+		shredCount--
+	}else{
+		bullet = bullets.getFirstExists(false);
+	}
 
-        if (bullet) {
-            //  And fire it
-            //  Make bullet come out of tip of ship with right angle
-            var bulletOffset = 20 * Math.sin(game.math
-                    .degToRad(player.angle));
-            bullet.reset(player.x + bulletOffset, player.y);
-            bullet.angle = player.angle;
-            game.physics.arcade.velocityFromAngle(bullet.angle,
-                    BULLET_SPEED, bullet.body.velocity);
-            bullet.body.velocity.y += player.body.velocity.y;
+    switch (player.weaponLevel) {
+		case 1:
+		//  To avoid them being allowed to fire too fast we set a time limit
+		if (game.time.now > bulletTimer) {
+			var BULLET_SPEED = 400;
+			var BULLET_SPACING = 250;
+			if (bullet) {
+				//  And fire it
+				//  Make bullet come out of tip of ship with right angle
+				var bulletOffset = 20 * Math.sin(game.math.degToRad(player.angle));
+				bullet.reset(player.x + bulletOffset, player.y);
+				bullet.angle = player.angle;
+				game.physics.arcade.velocityFromAngle(bullet.angle, BULLET_SPEED, bullet.body.velocity);
+				bullet.body.velocity.y += player.body.velocity.y;
 
-            bulletTimer = game.time.now + BULLET_SPACING;
-            game.add.audio('shoot', 0.5).play();
+				bulletTimer = game.time.now + BULLET_SPACING;
 
-        }
-    }
+				var audio = new Audio('assets/shoot.wav');
+				audio.play()
+				audio.volume=0.2
+			}
+		}
+		break;
+
+		case 2:
+		if (game.time.now > bulletTimer) {
+			var BULLET_SPEED = 400;
+			var BULLET_SPACING = 550;
+
+
+			for (var i = 0; i < 3; i++) {
+				if (got_shred){
+					bullet = shredBullet.getFirstExists(false);
+					shredCount--
+				}else{
+					bullet = bullets.getFirstExists(false);
+				}
+				if (bullet) {
+					//  Make bullet come out of tip of ship with right angle
+					var bulletOffset = 20 * Math.sin(game.math.degToRad(player.angle));
+					bullet.reset(player.x + bulletOffset, player.y);
+					//  "Spread" angle of 1st and 3rd bullets
+					var spreadAngle;
+					if (i === 0) spreadAngle = -20;
+					if (i === 1) spreadAngle = 0;
+					if (i === 2) spreadAngle = 20;
+					bullet.angle = player.angle + spreadAngle;
+					game.physics.arcade.velocityFromAngle(spreadAngle , BULLET_SPEED, bullet.body.velocity);
+				}
+				bulletTimer = game.time.now + BULLET_SPACING;
+			}
+ 			game.add.audio('shoot', 0.5).play();
+		}
+	}
 }
 
 function shipCollide(player, enemy) {
@@ -577,7 +624,7 @@ function bulletCollide(enemy, bullet) {
         //accelerate rate of enemy3 launches
         timeBetweenWaves *= 0.5
     }
-    if (shredCount <= 0) {
+    if ((shredCount <= 0) && (got_shred)) {
         got_shred = false
         console.log("Shred end");
     }
@@ -610,7 +657,7 @@ function playerShieldsFix(player, shieldsUp){
 }
 
 function playerShredBullet(player, shredBullet){
-    shredingBullet.kill()
+    shredBullet.kill()
     got_shred = true
     shredCount = 50
     console.log("GOT shred")
