@@ -542,6 +542,9 @@ function render() {
 
 function fireBullet() {
    BULLET_SPACING = player.got_rain ? 50 : BULLET_SPACING
+    if (shredCount <= 0) {
+        player.got_shred = false
+    }
 
     if (!player.got_triple) {
 		//  To avoid them being allowed to fire too fast we set a time limit
