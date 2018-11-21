@@ -345,9 +345,6 @@ function launchUpgrade5() {
 
 
 function launchEnemy2() {
-    // var MIN_ENEMY_SPACING = 300;
-    // var MAX_ENEMY_SPACING = 1000;
-
     var enemy = enemy2.getFirstExists(false);
     if (enemy) {
         enemy.reset(800, game.rnd.integerInRange(player.world.y - 100, player.world.y + 100));
@@ -355,29 +352,24 @@ function launchEnemy2() {
         enemy.body.velocity.y = game.rnd.integerInRange(0,-100);
         enemy.body.drag.y = 100;
 
-        enemy.trail.start(false, 800, 1);
-        enemy.trail.x = enemy.x;
-        enemy.trail.y = enemy.y;
+        enemy.trail.start(false,800,1);
 
         // Update function for each enemy ship to update rotation etc
         enemy.update = function(){
             enemy.trail.x = enemy.x;
             enemy.trail.y = enemy.y;
-        }
 
-        //  Kill enemies once they go off screen
-        // if ((enemy.y > game.height) || (enemy.x < 0)){
-        //     enemy.kill();
-        // }
-        // if (enemy.x < 0) { 
-			// enemy.kill();
-		// }
+            //kill enemies once they go off screen
+            if (enemy.x < 0) {
+                enemy.kill();
+            }
+        }
     }else{
-        console.log("No enemies left")
+        console.log("no enemies left")
     }
 
-    //  Send another enemy soon
-    enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(enemy2Spacing, enemy2Spacing + 1000), launchEnemy2);
+    // Send another enemy soon
+    enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(enemy2Spacing,enemy2Spacing+1000),launchEnemy2);
 }
 
 function launchEnemy3() {
