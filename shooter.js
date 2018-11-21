@@ -5,21 +5,29 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-demo', {
     render : render
 });
 
-var explosions;
-var player;
+// phaser state
+var menu;
+var level1;
+var level2;
 
+// enemies
 var enemy2;
 var enemy3;
 
+// timers
 var enemy2LaunchTimer;
 var enemy3LaunchTimer;
 
+// player variables
+var explosions;
+var player;
 var healthUp;
 var shieldsUp;
 var shredingBullet;
 var shredCount = 0
 var bulletRain;
 
+// other
 var starfield;
 var cursors;
 var bank;
@@ -28,13 +36,14 @@ var bullets;
 var fireButton;
 var bulletTimer = 0;
 
+// tweakers
 var timeBetweenWaves = 10000;
 var enemy2Spacing = 1000;
 var enemy3Launched = false;
 
-var ACCLERATION = 600;
-var DRAG = 400;
-var MAXSPEED = 400;
+var ACCLERATION = 4000;
+var DRAG = 6000;
+var MAXSPEED = 800;
 
 var ENEMY_SPEED = 300;
 var BULLET_SPEED = 400;
@@ -86,7 +95,12 @@ function create() {
 
     //  And some controls to play the game with
     cursors = game.input.keyboard.createCursorKeys();
+    console.log(cursors);
     fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+    wUp = game.input.keyboard.addKey(Phaser.Keyboard.W);
+    aLeft = game.input.keyboard.addKey(Phaser.Keyboard.A);
+    sDown = game.input.keyboard.addKey(Phaser.Keyboard.S);
+    dRight = game.input.keyboard.addKey(Phaser.Keyboard.D);
 
     //  The hero!
     player = game.add.sprite(100, game.height / 2, 'ship');
@@ -352,9 +366,12 @@ function launchEnemy2() {
         }
 
         //  Kill enemies once they go off screen
-        if (enemy.y > game.height ) {
-            enemy.kill();
-      }
+        // if ((enemy.y > game.height) || (enemy.x < 0)){
+        //     enemy.kill();
+        // }
+        // if (enemy.x < 0) { 
+			// enemy.kill();
+		// }
     }else{
         console.log("No enemies left")
     }
@@ -442,13 +459,13 @@ function update() {
     player.body.acceleration.y = 0;
     player.body.acceleration.x = 0;
 
-    if (cursors.up.isDown) {
+    if (cursors.up.isDown || wUp.isDown) {
         player.body.acceleration.y = -ACCLERATION;
-    } else if (cursors.down.isDown) {
+    } else if (cursors.down.isDown || sDown.isDown) {
         player.body.acceleration.y = ACCLERATION;
-    } else if (cursors.left.isDown) {
+    } else if (cursors.left.isDown || aLeft.isDown) {
         player.body.acceleration.x = -ACCLERATION;
-    } else if (cursors.right.isDown) {
+    } else if (cursors.right.isDown || dRight.isDown) {
         player.body.acceleration.x = ACCLERATION;
     }
 
@@ -502,16 +519,16 @@ function update() {
     game.physics.arcade.overlap(player, enemy3Bullet, enemyHitsPlayer, null, this);
 
     //  Move ship towards mouse pointer
-    if (game.input.y < game.width - 20 &&
-        game.input.y > 20 &&
-        game.input.x > 20 &&
-        game.input.x < game.height - 20) {
-        var minDist = 20;
-        var disty = game.input.y - player.y;
-        var distx = game.input.x - player.x;
-        player.body.velocity.y = MAXSPEED * game.math.clamp(disty / minDist, -1, 1);
-        player.body.velocity.x = MAXSPEED * game.math.clamp(distx / minDist, -1, 1);
-    }
+    // if (game.input.y < game.width - 20 &&
+    //     game.input.y > 20 &&
+    //     game.input.x > 20 &&
+    //     game.input.x < game.height - 20) {
+    //     var minDist = 20;
+    //     var disty = game.input.y - player.y;
+    //     var distx = game.input.x - player.x;
+    //     player.body.velocity.y = MAXSPEED * game.math.clamp(disty / minDist, -1, 1);
+    //     player.body.velocity.x = MAXSPEED * game.math.clamp(distx / minDist, -1, 1);
+    // }
 
     statsRender();
 
