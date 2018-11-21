@@ -17,6 +17,7 @@ var enemy3;
 // timers
 var enemy2LaunchTimer;
 var enemy3LaunchTimer;
+var rainTimeout;
 
 // player variables
 var explosions;
@@ -273,7 +274,7 @@ function create() {
     bulletRain.createMultiple(1, 'bulletRain');
 }
 
-function launchUpgrade1() {
+function launchHealthUp() {
     var upgrade = healthUp.getFirstExists(false);
 	if (upgrade) {
 		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
@@ -287,7 +288,7 @@ function launchUpgrade1() {
 	}
 }
 
-function launchUpgrade2() {
+function launchShieldsUp() {
     var upgrade = shieldsUp.getFirstExists(false);
 	if (upgrade) {
 		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
@@ -301,7 +302,7 @@ function launchUpgrade2() {
 	}
 }
 
-function launchUpgrade3() {
+function launchShredingBullet() {
     var upgrade = shredingBullet.getFirstExists(false);
 	if (upgrade) {
 		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
@@ -315,7 +316,7 @@ function launchUpgrade3() {
 	}
 }
 
-function launchUpgrade4() {
+function launchTripleBullet() {
     var upgrade = tripleBullet.getFirstExists(false);
 	if (upgrade) {
 		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
@@ -329,7 +330,7 @@ function launchUpgrade4() {
 	}
 }
 
-function launchUpgrade5() {
+function launchRain() {
     var upgrade = bulletRain.getFirstExists(false);
 	if (upgrade) {
 		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
@@ -550,7 +551,8 @@ function render() {
 }
 
 function fireBullet() {
-   BULLET_SPACING = player.got_rain ? 50 : BULLET_SPACING
+    console.log(player.got_rain);
+    current_spacing = player.got_rain ? 50 : BULLET_SPACING
     if (shredCount <= 0) {
         player.got_shred = false
     }
@@ -574,7 +576,7 @@ function fireBullet() {
 				game.physics.arcade.velocityFromAngle(bullet.angle, BULLET_SPEED, bullet.body.velocity);
 				bullet.body.velocity.y += player.body.velocity.y;
 
-				bulletTimer = game.time.now + BULLET_SPACING;
+				bulletTimer = game.time.now + current_spacing;
 
  			    game.add.audio('shoot', 0.5).play();
 			}
@@ -600,7 +602,7 @@ function fireBullet() {
 					bullet.angle = player.angle + spreadAngle;
 					game.physics.arcade.velocityFromAngle(spreadAngle , BULLET_SPEED, bullet.body.velocity);
 				}
-				bulletTimer = game.time.now + BULLET_SPACING;
+				bulletTimer = game.time.now + current_spacing;
 			}
  			game.add.audio('shoot', 0.5).play();
 		}
@@ -625,23 +627,23 @@ function bulletCollide(enemy, bullet) {
 
     if (player.score > 0) {
         if (player.score % 5 == 0) {
-            launchUpgrade1()
+            launchHealthUp()
         }
         if (player.score % 10 == 0) {
-            launchUpgrade2()
+            launchShieldsUp()
         }
         if (player.score % 20 == 0) {
             if (!player.got_triple) {
-                launchUpgrade4()
+                launchTripleBullet()
             }
         }
 
         if (player.score % 30 == 0) {
-            launchUpgrade3()
+            launchShredingBullet()
         }
 
         if (player.score % 40 == 0) {
-            launchUpgrade5()
+            launchRain()
         }
     }
     // if (player.shields == 0) {
@@ -728,7 +730,12 @@ function playerTripleBullet(player, tripleBullet){
 function playerBulletRain(player, bulletRain){
     bulletRain.kill()
     player.got_rain = true
-    console.log("GOT rain")
+    console.log("GOT RAIN");
+    game.time.events.add(90000, () => {
+        player.got_rain = false
+        console.log("RAIN STOPED");
+    })
+
 }
 
 function restart () {
@@ -749,7 +756,7 @@ function restart () {
 
     game.time.events.remove(enemy2LaunchTimer);
     game.time.events.add(1000, launchEnemy2);
-    game.time.events.add(1000, launchUpgrade1);
+    game.time.events.add(1000, launchHealthUp);
     game.time.events.remove(enemy3LaunchTimer);
 
     //  Reset pacing
