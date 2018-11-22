@@ -13,8 +13,7 @@ var menu = {
 
 		// button2 = game.add.button(game.width-200,50, "lvl2", click2, this, function(){});
         // button2.scale.setTo(0.3,0.3)
-    }
-
+    },
     update: function() {
         starfield.tilePosition.y += background_speed;
     }
