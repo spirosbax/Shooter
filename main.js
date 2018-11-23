@@ -1,4 +1,6 @@
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'gameDiv')
+console.log("Height:" + game.height);
+console.log("Width:" + game.width);
 
 // phaser state
 var menu;
@@ -8,6 +10,9 @@ var level2;
 // enemies
 var enemy2;
 var enemy3;
+var boss1;
+var boss1BankX = 0;
+var bossDeath;
 
 // timers
 var enemy2LaunchTimer;
@@ -45,10 +50,9 @@ var ENEMY_SPEED = 300;
 var BULLET_SPEED = 400;
 var BULLET_SPACING = 250;
 
-game.state.add('menu', menu);
 game.state.add('level1', level1);
+game.state.add('menu', menu);
 game.state.start('menu')
-console.log("after menu started");
 
 
 function click1() {
@@ -220,7 +224,6 @@ function addEnemyEmitterTrail(enemy) {
     enemyTrail.setAlpha(0.4, 0, 800);
     enemyTrail.setScale(0.01, 0.1, 0.01, 0.1, 1000, Phaser.Easing.Quintic.Out);
     enemy.trail = enemyTrail;
-
 }
 
 
@@ -297,6 +300,7 @@ function shipCollide(player, enemy) {
 
 
 function bulletCollide(enemy, bullet) {
+    player.score += 1;
 
     if (player.score > 0) {
         if (player.score % 5 == 0) {
@@ -319,6 +323,10 @@ function bulletCollide(enemy, bullet) {
         if (player.score % 43 == 0) {
             launchRain()
         }
+
+        if (player.score == 1) {
+            launchBoss()
+        }
     }
     // if (player.shields == 0) {
     //     player.shieldDownPlaying = true
@@ -336,7 +344,6 @@ function bulletCollide(enemy, bullet) {
         bullet.kill();
     }
 
-    player.score += 1;
     statsRender();
 
     game.add.audio('hit', 0.2).play();
@@ -363,11 +370,31 @@ function bulletCollide(enemy, bullet) {
     }
 }
 
+function playerHitsBoss(boss1, bullet) {
+    // console.log("BOSS inside playerHitsBoss");
+    // console.log(boss1);
+
+    bullet.kill()
+    game.add.audio('hit', 0.2).play();
+    if (player.got_shred) {
+        boss1.hp -= 10
+        player.score += 10
+    } else {
+        boss1.hp -= 1
+        player.score += 1
+    }
+
+    if (boss1.hp < 5) {
+        boss1.finishOff();
+    }
+}
+
 function enemyHitsPlayer(player, bullet) {
     var explosion = explosions.getFirstExists(false);
     explosion.reset(player.body.x + player.body.halfWidth, player.body.y + player.body.halfHeight);
     explosion.alpha = 0.7;
     explosion.play('explosion', 30, false, true);
+    // TODO add explosion sound
 
     player.damage(bullet.damageAmount);
     bullet.kill();
@@ -423,6 +450,7 @@ function restart () {
     shredBullet.callAll('kill');
     tripleBullet.callAll('kill');
     bulletRain.callAll('kill');
+    boss1.kill()
 
     player.got_shred = false
     player.got_triple = false
@@ -443,8 +471,26 @@ function restart () {
     //  Revive the player
     player.revive();
     player.health = 100;
-    player.shields = 50;
+    player.shields = 100;
     player.score = 0;
     player.alive = true;
     statsRender();
+}
+
+function launchBoss() {
+    game.time.events.remove(enemy2LaunchTimer);
+    game.time.events.remove(enemy3LaunchTimer);
+    console.log("Launch BOSS(1)");
+    boss1.reset(game.width / 2 + 550, game.height / 2);
+}
+
+function bossHitTest(boss, bullet) {
+    if ((bullet.x > boss.x + boss.width / 5 &&
+        bullet.y > boss.y) ||
+        (bullet.x < boss.x - boss.width / 5 &&
+        bullet.y > boss.y)) {
+      return false;
+    } else {
+      return true;
+    }
 }
