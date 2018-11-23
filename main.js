@@ -1,7 +1,4 @@
-// import { menu } from './menu.js'
-// import './menu.js'
-
-var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-demo')
+var game = new Phaser.Game(800, 600, Phaser.AUTO, 'gameDiv')
 
 // phaser state
 var menu;
@@ -48,8 +45,8 @@ var ENEMY_SPEED = 300;
 var BULLET_SPEED = 400;
 var BULLET_SPACING = 250;
 
-console.log(menu);
 game.state.add('menu', menu);
+game.state.add('level1', level1);
 game.state.start('menu')
 console.log("after menu started");
 
