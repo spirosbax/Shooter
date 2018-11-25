@@ -15,6 +15,7 @@ var boss1BankX = 0;
 var bossDeath;
 var bossBulletTimer = 0;
 var bossFireTimer;
+var bulletSpeed = 400;
 
 // timers
 var enemy2LaunchTimer;
@@ -121,7 +122,6 @@ function launchEnemy3() {
             enemy.reset(800 + (horizontalSpacing * i), game.height / 2)
             enemy.body.velocity.x = -horizontalSpeed;
             //  Set up firing
-            var bulletSpeed = 400;
             var firingDelay = 2000;
             enemy.bullets = 2;
             enemy.lastShot = 0;
@@ -237,7 +237,7 @@ function shipCollide(player, enemy) {
 }
 
 
-function bulletCollide(enemy, bullet) {
+function playerHitEnemy(enemy, bullet) {
     player.score += 1;
     // if (player.shields == 0) {
     //     player.shieldDownPlaying = true

@@ -156,43 +156,64 @@ var level1 = {
         boss1.addChild(ship);
 
         boss1.fire = function() {
-            if (game.time.now > bossBulletTimer) {
-                var raySpacing = 3000;
-                var chargeTime = 1500;
-                var rayTime = 1500;
+            // if (game.time.now > bossBulletTimer) {
+            //     var raySpacing = 3000;
+            //     var chargeTime = 1500;
+            //     var rayTime = 1500;
 
-                function chargeAndShoot(side) {
-                    ray = boss1['ray' + side];
-                    ray.name = side
-                    ray.revive();
-                    ray.y = 80;
-                    ray.alpha = 0;
-                    ray.scale.y = 13;
-                    game.add.tween(ray).to({alpha: 1}, chargeTime, Phaser.Easing.Linear.In, true).onComplete.add(function(ray){
-                        ray.scale.y = 150;
-                        game.add.tween(ray).to({y: -1500}, rayTime, Phaser.Easing.Linear.In, true).onComplete.add(function(ray){
-                            ray.kill();
-                        });
-                    });
-                }
-                chargeAndShoot('Right');
-                chargeAndShoot('Left');
+            //     function chargeAndShoot(side) {
+            //         ray = boss1['ray' + side];
+            //         ray.name = side
+            //         ray.revive();
+            //         ray.y = 80;
+            //         ray.alpha = 0;
+            //         ray.scale.y = 13;
+            //         game.add.tween(ray).to({alpha: 1}, chargeTime, Phaser.Easing.Linear.In, true).onComplete.add(function(ray){
+            //             ray.scale.y = 150;
+            //             game.add.tween(ray).to({y: -1500}, rayTime, Phaser.Easing.Linear.In, true).onComplete.add(function(ray){
+            //                 ray.kill();
+            //             });
+            //         });
+            //     }
+            //     chargeAndShoot('Right');
+            //     chargeAndShoot('Left');
 
-                bossBulletTimer = game.time.now + raySpacing;
+            //     bossBulletTimer = game.time.now + raySpacing;
+            // }
+            var raySpacing = 3000;
+            var chargeTime = 1500;
+            var rayTime = 1500;
+            enemyBullet = enemy3Bullet.getFirstExists(false);
+            // console.log(this);
+            if (enemyBullet &&
+                this.x &&
+                this.y) {
+                enemyBullet.reset(this.x, this.y + this.height / 2);
+                // console.log("this.x:" + this.x);
+                // console.log("this.y:" + this.y);
+                var angle = game.physics.arcade.moveToObject(enemyBullet, player, bulletSpeed);
+                enemyBullet.angle = game.math.radToDeg(angle);
             }
         };
 
         boss1.update = function() {
             if (!boss1.alive) return;
 
-            boss1.rayLeft.update();
-            boss1.rayRight.update();
+            // boss1.rayLeft.update();
+            // boss1.rayRight.update();
 
+            // var angleToPlayer = game.math.radToDeg(game.physics.arcade.angleBetween(boss1, player)) - 90;
+            // var anglePointing = 180 - Math.abs(boss1.angle);
+            // if (anglePointing - angleToPlayer < 18) {
+            //     boss1.fire();
+            //     bossFireTimer = game.time.events.add(500, boss1.fire)
+            // }
+            //
             var angleToPlayer = game.math.radToDeg(game.physics.arcade.angleBetween(boss1, player)) - 90;
             var anglePointing = 180 - Math.abs(boss1.angle);
             if (anglePointing - angleToPlayer < 18) {
                 boss1.fire();
-                bossFireTimer = game.time.events.add(500, boss1.fire)
+                bossFireTimer = game.time.events.add(5000, boss1.fire)
             }
         }
 
@@ -397,13 +418,13 @@ var level1 = {
 
         //  Check collisions
         game.physics.arcade.overlap(player, enemy2, shipCollide, null, this);
-        game.physics.arcade.overlap(enemy2, bullets, bulletCollide, null, this);
-        game.physics.arcade.overlap(enemy2, shredingBullet, bulletCollide, null, this);
+        game.physics.arcade.overlap(enemy2, bullets, playerHitEnemy, null, this);
+        game.physics.arcade.overlap(enemy2, shredingBullet, playerHitEnemy, null, this);
 
         // enemy 3
         game.physics.arcade.overlap(player, enemy3, shipCollide, null, this); // player with enemy3
-        game.physics.arcade.overlap(enemy3, bullets, bulletCollide, null, this); // bullet with enemy3
-        game.physics.arcade.overlap(enemy3, shredingBullet, bulletCollide, null, this); // shred bullet with enemy3
+        game.physics.arcade.overlap(enemy3, bullets, playerHitEnemy, null, this); // bullet with enemy3
+        game.physics.arcade.overlap(enemy3, shredingBullet, playerHitEnemy, null, this); // shred bullet with enemy3
         game.physics.arcade.overlap(player, enemy3Bullet, enemyHitsPlayer, null, this);
 
         // boss1
