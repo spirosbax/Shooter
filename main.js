@@ -13,6 +13,8 @@ var enemy3;
 var boss1;
 var boss1BankX = 0;
 var bossDeath;
+var bossBulletTimer = 0;
+var bossFireTimer;
 
 // timers
 var enemy2LaunchTimer;
@@ -22,6 +24,8 @@ var rainTimeout;
 // player variables
 var explosions;
 var player;
+
+// upgrades
 var healthUp;
 var shieldsUp;
 var shredingBullet;
@@ -51,6 +55,7 @@ var BULLET_SPEED = 400;
 var BULLET_SPACING = 250;
 
 game.state.add('level1', level1);
+game.state.add('level2', level2);
 game.state.add('menu', menu);
 game.state.start('menu')
 
@@ -59,72 +64,20 @@ function click1() {
     game.state.start('level1');
 }
 
-function launchHealthUp() {
-    var upgrade = healthUp.getFirstExists(false);
-	if (upgrade) {
-		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
-		upgrade.body.velocity.x = -ENEMY_SPEED;
-		upgrade.body.velocity.y = 0
-		upgrade.body.drag.y = 100;
-
-		if (upgrade.y > game.height ) {
-			upgrade.kill();
-		}
-	}
+function click2() {
+    game.state.start('level2');
 }
 
-function launchShieldsUp() {
-    var upgrade = shieldsUp.getFirstExists(false);
-	if (upgrade) {
-		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
-		upgrade.body.velocity.x = -ENEMY_SPEED;
-		upgrade.body.velocity.y = 0
-		upgrade.body.drag.y = 100;
+function launchUpgrade(upgrade) {
+    var up = upgrade.getFirstExists(false);
+	if (up) {
+		up.reset(game.width, game.rnd.integerInRange(100, game.height-100));
+		up.body.velocity.x = -ENEMY_SPEED;
+		up.body.velocity.y = 0
+		up.body.drag.y = 100;
 
-		if (upgrade.y > game.height ) {
-			upgrade.kill();
-		}
-	}
-}
-
-function launchShredingBullet() {
-    var upgrade = shredingBullet.getFirstExists(false);
-	if (upgrade) {
-		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
-		upgrade.body.velocity.x = -ENEMY_SPEED;
-		upgrade.body.velocity.y = 0
-		upgrade.body.drag.y = 100;
-
-		if (upgrade.y > game.height ) {
-			upgrade.kill();
-		}
-	}
-}
-
-function launchTripleBullet() {
-    var upgrade = tripleBullet.getFirstExists(false);
-	if (upgrade) {
-		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
-		upgrade.body.velocity.x = -ENEMY_SPEED;
-		upgrade.body.velocity.y = 0
-		upgrade.body.drag.y = 100;
-
-		if (upgrade.y > game.height ) {
-			upgrade.kill();
-		}
-	}
-}
-
-function launchRain() {
-    var upgrade = bulletRain.getFirstExists(false);
-	if (upgrade) {
-		upgrade.reset(game.width, game.rnd.integerInRange(100, game.height-100));
-		upgrade.body.velocity.x = -ENEMY_SPEED;
-		upgrade.body.velocity.y = 0
-		upgrade.body.drag.y = 100;
-
-		if (upgrade.y > game.height ) {
-			upgrade.kill();
+		if (up.y > game.height ) {
+			up.kill();
 		}
 	}
 }
@@ -136,14 +89,11 @@ function launchEnemy2() {
         enemy.body.velocity.x = -ENEMY_SPEED;
         enemy.body.velocity.y = game.rnd.integerInRange(0,-100);
         enemy.body.drag.y = 100;
-
         enemy.trail.start(false,800,1);
-
         // Update function for each enemy ship to update rotation etc
         enemy.update = function(){
             enemy.trail.x = enemy.x;
             enemy.trail.y = enemy.y;
-
             //kill enemies once they go off screen
             if (enemy.x < 0) {
                 enemy.kill();
@@ -152,7 +102,6 @@ function launchEnemy2() {
     }else{
         console.log("no enemies left")
     }
-
     // Send another enemy soon
     enemy2LaunchTimer = game.time.events.add(game.rnd.integerInRange(enemy2Spacing,enemy2Spacing+1000),launchEnemy2);
 }
@@ -164,7 +113,6 @@ function launchEnemy3() {
     var frequency = 70;
     var horizontalSpacing = 70;
     var numEnemiesInWave = 3;
-
     //  Launch wave
     for (var i =0; i < numEnemiesInWave; i++) {
         var enemy = enemy3.getFirstExists(false);
@@ -172,23 +120,19 @@ function launchEnemy3() {
             enemy.startingY = startingY;
             enemy.reset(800 + (horizontalSpacing * i), game.height / 2)
             enemy.body.velocity.x = -horizontalSpeed;
-
             //  Set up firing
             var bulletSpeed = 400;
             var firingDelay = 2000;
             enemy.bullets = 2;
             enemy.lastShot = 0;
-
             //  Update function for each enemy
             enemy.update = function(){
                 //  Wave movement
                 this.body.y = this.startingY + Math.sin((this.x) / frequency) * spread;
-
                 //  Squish and rotate ship for illusion of "banking"
                 bank = Math.cos((this.x + 60) / frequency)
                 this.scale.y = 0.5 - Math.abs(bank) / 8;
                 this.angle = -bank * 2;
-                					//  Fire
                 enemyBullet = enemy3Bullet.getFirstExists(false);
                 if (enemyBullet &&
                     this.alive &&
@@ -201,7 +145,6 @@ function launchEnemy3() {
                         var angle = game.physics.arcade.moveToObject(enemyBullet, player, bulletSpeed);
                         enemyBullet.angle = game.math.radToDeg(angle);
                     }
-
                 //  Kill enemies once they go off screen
                 if (this.y > game.width + 400) {
                     this.kill();
@@ -210,7 +153,6 @@ function launchEnemy3() {
             }
         }
     }
-
     //  Send another wave soon
     enemy3LaunchTimer = game.time.events.add(game.rnd.integerInRange(timeBetweenWaves, timeBetweenWaves + 4000), launchEnemy3);
 }
@@ -232,13 +174,12 @@ function fireBullet() {
     if (shredCount <= 0) {
         player.got_shred = false
     }
-
     if (!player.got_triple) {
 		//  To avoid them being allowed to fire too fast we set a time limit
 		if (game.time.now > bulletTimer) {
             var bullet;
             if (player.got_shred){
-                bullet = shredBullet.getFirstExists(false);
+                bullet = shredingBullet.getFirstExists(false);
                 shredCount--
             }else{
                 bullet = bullets.getFirstExists(false);
@@ -251,9 +192,7 @@ function fireBullet() {
 				bullet.angle = player.angle;
 				game.physics.arcade.velocityFromAngle(bullet.angle, BULLET_SPEED, bullet.body.velocity);
 				bullet.body.velocity.y += player.body.velocity.y;
-
 				bulletTimer = game.time.now + current_spacing;
-
  			    game.add.audio('shoot', 0.5).play();
 			}
 		}
@@ -261,7 +200,7 @@ function fireBullet() {
 		if (game.time.now > bulletTimer) {
 			for (var i = 0; i < 3; i++) {
 				if (player.got_shred){
-					bullet = shredBullet.getFirstExists(false);
+					bullet = shredingBullet.getFirstExists(false);
 					shredCount--
 				}else{
 					bullet = bullets.getFirstExists(false);
@@ -291,7 +230,6 @@ function shipCollide(player, enemy) {
     explosion.body.velocity.y = enemy.body.velocity.y;
     explosion.alpha = 0.7;
     explosion.play('explosion', 30, false, true);
-
     player.damage(enemy.damageAmount);
     enemy.kill();
     statsRender();
@@ -301,39 +239,12 @@ function shipCollide(player, enemy) {
 
 function bulletCollide(enemy, bullet) {
     player.score += 1;
-
-    if (player.score > 0) {
-        if (player.score % 5 == 0) {
-            launchHealthUp()
-        }
-        if (player.score % 11 == 0) {
-            launchShieldsUp()
-        }
-        if (player.score % 23 == 0) {
-            console.log(!player.got_triple);
-            if (!player.got_triple) {
-                launchTripleBullet()
-            }
-        }
-
-        if (player.score % 34 == 0) {
-            launchShredingBullet()
-        }
-
-        if (player.score % 43 == 0) {
-            launchRain()
-        }
-
-        if (player.score == 1) {
-            launchBoss()
-        }
-    }
     // if (player.shields == 0) {
     //     player.shieldDownPlaying = true
     //     console.log("SHIELDS DOWN")
     //     game.add.audio('shieldsDownAudio').play();
     // }
-
+    launchUpgrades()
     var explosion = explosions.getFirstExists(false);
     explosion.reset(bullet.body.x + bullet.body.halfWidth, bullet.body.y + bullet.body.halfHeight);
     explosion.body.velocity.y = enemy.body.velocity.y;
@@ -343,11 +254,8 @@ function bulletCollide(enemy, bullet) {
     if (!player.got_shred) {
         bullet.kill();
     }
-
     statsRender();
-
     game.add.audio('hit', 0.2).play();
-
     //  Pacing
     var scoreThreshold = 5
     //  Enemies come quicker as score increases
@@ -373,20 +281,19 @@ function bulletCollide(enemy, bullet) {
 function playerHitsBoss(boss1, bullet) {
     // console.log("BOSS inside playerHitsBoss");
     // console.log(boss1);
-
     bullet.kill()
-    game.add.audio('hit', 0.2).play();
+    game.add.audio('hit', 0.3).play();
     if (player.got_shred) {
         boss1.hp -= 10
         player.score += 10
     } else {
-        boss1.hp -= 1
-        player.score += 1
+        boss1.hp -= 2
+        player.score += 2
     }
-
-    if (boss1.hp < 5) {
+    if (boss1.hp <= 0) {
         boss1.finishOff();
     }
+    launchUpgrades()
 }
 
 function enemyHitsPlayer(player, bullet) {
@@ -395,7 +302,6 @@ function enemyHitsPlayer(player, bullet) {
     explosion.alpha = 0.7;
     explosion.play('explosion', 30, false, true);
     // TODO add explosion sound
-
     player.damage(bullet.damageAmount);
     bullet.kill();
     statsRender();
@@ -415,8 +321,8 @@ function playerShieldsFix(player, shieldsUp){
     console.log("GOT shields")
 }
 
-function playerShredBullet(player, shredBullet){
-    shredBullet.kill()
+function playerShredBullet(player, shredBulletUp){
+    shredBulletUp.kill()
     player.got_shred = true
     shredCount = 40
     console.log("GOT shred")
@@ -447,27 +353,21 @@ function restart () {
     enemy3Bullet.callAll('kill');
     healthUp.callAll('kill');
     shieldsUp.callAll('kill');
-    shredBullet.callAll('kill');
+    shredBulletUp.callAll('kill');
     tripleBullet.callAll('kill');
     bulletRain.callAll('kill');
     boss1.kill()
-
     player.got_shred = false
     player.got_triple = false
     shredCount = 0
-
     game.time.events.remove(enemy2LaunchTimer);
     game.time.events.add(1000, launchEnemy2);
-    game.time.events.add(1000, launchHealthUp);
     game.time.events.remove(enemy3LaunchTimer);
-
     //  Reset pacing
     enemy2Spacing = 1000;
     enemy3Launched = false
-
     //  Hide the text
     gameOver.visible = false;
-
     //  Revive the player
     player.revive();
     player.health = 100;
@@ -485,12 +385,49 @@ function launchBoss() {
 }
 
 function bossHitTest(boss, bullet) {
-    if ((bullet.x > boss.x + boss.width / 5 &&
-        bullet.y > boss.y) ||
-        (bullet.x < boss.x - boss.width / 5 &&
-        bullet.y > boss.y)) {
-      return false;
+    if ((bullet.x > boss.x + boss.width / 5 && bullet.y > boss.y) ||
+        (bullet.x < boss.x - boss.width / 5 && bullet.y > boss.y)) {
+        return false;
     } else {
-      return true;
+        return true;
     }
+}
+
+function launchUpgrades() {
+    if (player.score > 0) {
+        if (player.score % 5 == 0) {
+            launchUpgrade(healthUp)
+        }
+        if (player.score % 11 == 0) {
+            launchUpgrade(shieldsUp)
+        }
+        if (player.score % 23 == 0) {
+            if (!player.got_triple) {
+                launchUpgrade(tripleBullet)
+            }
+        }
+        if (player.score % 34 == 0) {
+            launchUpgrade(shredBulletUp)
+        }
+        if (player.score % 43 == 0) {
+            launchUpgrade(bulletRain)
+        }
+        if (player.score == 1) {
+            launchBoss()
+        }
+    }
+
+}
+
+function wonLevel1() {
+    console.log("YOU WON LEVEL1");
+    // player.health = 200; permanent upgrade
+    //TODO player going to next level animation
+    game.state.start('level2');
+}
+
+function rayHitsPlayer(player, ray) {
+    console.log("RAY HIT PLAYER");
+    player.damage(ray.damageAmount)
+    player.health -= ray.damageAmount
 }
