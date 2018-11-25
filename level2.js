@@ -91,7 +91,7 @@ var level2 = {
         boss2.alive = false;
         boss2.anchor.setTo(0.5, 0.5);
         boss2.damageAmount = 50;
-        boss2.hp = 2000
+        boss2.hp = 1000
         boss2.angle = 270;
         boss2.scale.x = 0.6;
         boss2.scale.y = 0.6;

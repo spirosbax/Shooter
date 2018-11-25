@@ -30,7 +30,6 @@ var level1 = {
 
     create: function() {
         cur_level = 1
-        enemy3Launched = false
         enemy3Angle = 0
         // start background music
         game.add.audio("background", 0.2, loop=true).play();
@@ -92,7 +91,7 @@ var level1 = {
         boss1.alive = false;
         boss1.anchor.setTo(0.5, 0.5);
         boss1.damageAmount = 50;
-        boss1.hp = 300
+        boss1.hp = 500
         boss1.angle = 270;
         boss1.scale.x = 0.6;
         boss1.scale.y = 0.6;

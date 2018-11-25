@@ -51,7 +51,7 @@ var timeBetweenWaves = 10000;
 var enemy2Spacing = 1000;
 var enemy3Launched = false;
 
-var ACCLERATION = 4000;
+var ACCLERATION = 3000;
 var DRAG = 6000;
 var MAXSPEED = 800;
 
@@ -431,7 +431,7 @@ function wonLevel1() {
     console.log("YOU WON LEVEL1");
     // player.health = 200; permanent upgrade
     //TODO player going to next level animation
-    game.time.events.add(2000, startLvl2)
+    game.time.events.add(4000, startLvl2)
 }
 
 function wonLevel2() {
