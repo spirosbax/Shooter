@@ -6,16 +6,20 @@ console.log("Width:" + game.width);
 var menu;
 var level1;
 var level2;
+var cur_level; // 1 or 2, int
 
 // enemies
 var enemy2;
 var enemy3;
 var boss1;
+var boss2;
 var boss1BankX = 0;
 var bossDeath;
 var bossBulletTimer = 0;
 var bossFireTimer;
 var bulletSpeed = 400;
+var bossScoreLimit = 50;
+var enemy3Angle;
 
 // timers
 var enemy2LaunchTimer;
@@ -132,7 +136,7 @@ function launchEnemy3() {
                 //  Squish and rotate ship for illusion of "banking"
                 bank = Math.cos((this.x + 60) / frequency)
                 this.scale.y = 0.5 - Math.abs(bank) / 8;
-                this.angle = -bank * 2;
+                this.angle = enemy3Angle - bank * 2;
                 enemyBullet = enemy3Bullet.getFirstExists(false);
                 if (enemyBullet &&
                     this.alive &&
@@ -239,11 +243,6 @@ function shipCollide(player, enemy) {
 
 function playerHitEnemy(enemy, bullet) {
     player.score += 1;
-    // if (player.shields == 0) {
-    //     player.shieldDownPlaying = true
-    //     console.log("SHIELDS DOWN")
-    //     game.add.audio('shieldsDownAudio').play();
-    // }
     launchUpgrades()
     var explosion = explosions.getFirstExists(false);
     explosion.reset(bullet.body.x + bullet.body.halfWidth, bullet.body.y + bullet.body.halfHeight);
@@ -309,14 +308,14 @@ function enemyHitsPlayer(player, bullet) {
 
 function playerHeal(player, healthUp){
     healthUp.kill()
-    player.health = 100
+    player.health = 100 * cur_level
     game.add.audio('healthAudio',0.5).play();
     console.log("GOT healthUp")
 }
 
 function playerShieldsFix(player, shieldsUp){
     shieldsUp.kill()
-    player.shields = 100
+    player.shields = 100 * cur_level
     game.add.audio('shieldsAudio').play();
     console.log("GOT shields")
 }
@@ -356,7 +355,12 @@ function restart () {
     shredBulletUp.callAll('kill');
     tripleBullet.callAll('kill');
     bulletRain.callAll('kill');
-    boss1.kill()
+    if (boss1) {
+        boss1.kill()
+    }
+    if (boss2) {
+        boss2.kill()
+    }
     player.got_shred = false
     player.got_triple = false
     shredCount = 0
@@ -381,7 +385,11 @@ function launchBoss() {
     game.time.events.remove(enemy2LaunchTimer);
     game.time.events.remove(enemy3LaunchTimer);
     console.log("Launch BOSS(1)");
-    boss1.reset(game.width / 2 + 550, game.height / 2);
+    if (cur_level == 1) {
+        boss1.reset(game.width / 2 + 550, game.height / 2);
+    } else {
+        boss2.reset(game.width / 2 + 550, game.height / 2);
+    }
 }
 
 function bossHitTest(boss, bullet) {
@@ -412,7 +420,7 @@ function launchUpgrades() {
         if (player.score % 43 == 0) {
             launchUpgrade(bulletRain)
         }
-        if (player.score == 1) {
+        if (player.score == bossScoreLimit) {
             launchBoss()
         }
     }
@@ -423,11 +431,22 @@ function wonLevel1() {
     console.log("YOU WON LEVEL1");
     // player.health = 200; permanent upgrade
     //TODO player going to next level animation
-    game.state.start('level2');
+    game.time.events.add(2000, startLvl2)
+}
+
+function wonLevel2() {
+    console.log("YOU WON LEVEL2");
+    game.time.events.remove(enemy2LaunchTimer);
+    game.time.events.remove(enemy3LaunchTimer);
+    //TODO player going to next level animation
 }
 
 function rayHitsPlayer(player, ray) {
     console.log("RAY HIT PLAYER");
     player.damage(ray.damageAmount)
     player.health -= ray.damageAmount
+}
+
+function startLvl2() {
+    game.state.start('level2');
 }

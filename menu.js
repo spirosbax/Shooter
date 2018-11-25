@@ -10,7 +10,7 @@ var menu = {
         starfield = game.add.tileSprite(0, 0, 800, 600, 'starfield')
 
         button1 = game.add.button(game.width/2 - 100,game.height/2 - 200, "lvl1", click1 , this, function(){})
-        button2 = game.add.button(game.width/2 - 100,game.height/2 - 50, "lvl2", click1 , this, function(){})
+        button2 = game.add.button(game.width/2 - 100,game.height/2 - 50, "lvl2", click2 , this, function(){})
     },
     update: function() {
         starfield.tilePosition.x -= 2

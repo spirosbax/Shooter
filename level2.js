@@ -1,4 +1,4 @@
-var level1 = {
+var level2 = {
     preload: function() {
         game.load.image('starfield', './assets/starfield.png');
         game.load.image('ship', './assets/ship.png');
@@ -6,10 +6,11 @@ var level1 = {
         game.load.image('bullet', './assets/bullets/bullet.png');
         game.load.image('shredingBullet', './assets/bullets/bullet2.png');
 
-        game.load.image('enemy2', './assets/enemies/enemy2.png');
-        game.load.image('enemy3', './assets/enemies/enemy3.png');
+        game.load.image('enemy2', './assets/enemies/enemy1.png');
+        game.load.image('enemy3', './assets/enemies/green-enemy.png');
         game.load.image('enemy3Bullet', './assets/bullets/blue-enemy-bullet.png')
-        game.load.image('boss1', './assets/enemies/boss1.png');
+
+        game.load.image('boss2', './assets/enemies/boss2.png');
         game.load.spritesheet('explosion', './assets/explode.png', 128, 128);
 
         game.load.image('healthUp', './assets/upgrades/healthUp.png');
@@ -29,17 +30,14 @@ var level1 = {
     },
 
     create: function() {
-        cur_level = 1
+        cur_level = 2
+        enemy3Angle = 270
         enemy3Launched = false
-        enemy3Angle = 0
         // start background music
         game.add.audio("background", 0.2, loop=true).play();
-
         game.scale.pageAlignHorizontally = true;
-
         //  The scrolling starfield background
         starfield = game.add.tileSprite(0, 0, 800, 600, 'starfield');
-
         //  And some controls to play the game with
         cursors = game.input.keyboard.createCursorKeys();
         fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
@@ -63,8 +61,9 @@ var level1 = {
         player.got_shred = false;
         player.got_triple = false;
         player.got_rain = false;
-        player.setHealth(100);
-        player.shields = 100;
+        player.health = 200
+        console.log("IN LEVEL 2");
+        player.shields = 200;
         player.score = 0;
         player.alive = true;
         player.damage = function(damageAmount){
@@ -84,33 +83,33 @@ var level1 = {
             }
         }
 
-        // boss1 code
-        boss1 = game.add.sprite(0, 0, 'boss1');
-        game.physics.enable(boss1, Phaser.Physics.ARCADE);
-        boss1.startingY = game.height/2
-        boss1.exists = false;
-        boss1.alive = false;
-        boss1.anchor.setTo(0.5, 0.5);
-        boss1.damageAmount = 50;
-        boss1.hp = 300
-        boss1.angle = 270;
-        boss1.scale.x = 0.6;
-        boss1.scale.y = 0.6;
-        boss1.body.maxVelocity.setTo(100, 80);
-        boss1.dying = false;
-        boss1.finishOff = function() {
-           if (!boss1.dying) {
-                boss1.dying = true;
-                bossDeath.x = boss1.x;
-                bossDeath.y = boss1.y;
+        // boss2 code
+        boss2 = game.add.sprite(0, 0, 'boss2');
+        game.physics.enable(boss2, Phaser.Physics.ARCADE);
+        boss2.startingY = game.height/2
+        boss2.exists = false;
+        boss2.alive = false;
+        boss2.anchor.setTo(0.5, 0.5);
+        boss2.damageAmount = 50;
+        boss2.hp = 2000
+        boss2.angle = 270;
+        boss2.scale.x = 0.6;
+        boss2.scale.y = 0.6;
+        boss2.body.maxVelocity.setTo(100, 80);
+        boss2.dying = false;
+        boss2.finishOff = function() {
+           if (!boss2.dying) {
+                boss2.dying = true;
+                bossDeath.x = boss2.x;
+                bossDeath.y = boss2.y;
                 bossDeath.start(false, 1000, 50, 20);
-                //  kill boss1 after explotions
+                //  kill boss2 after explotions
                 game.time.events.add(1000, function(){
                     var explosion = explosions.getFirstExists(false);
                     var beforeScaleX = explosions.scale.x;
                     var beforeScaleY = explosions.scale.y;
                     var beforeAlpha = explosions.alpha;
-                    explosion.reset(boss1.body.x + boss1.body.halfWidth, boss1.body.y + boss1.body.halfHeight);
+                    explosion.reset(boss2.body.x + boss2.body.halfWidth, boss2.body.y + boss2.body.halfHeight);
                     explosion.alpha = 0.4;
                     explosion.scale.x = 3;
                     explosion.scale.y = 3;
@@ -121,41 +120,39 @@ var level1 = {
                         explosion.alpha = beforeAlpha;
                         game.add.audio('collide', 1).play();
                     });
-                    boss1.kill();
-                    // booster.kill();
-                    boss1.dying = false;
+                    boss2.kill();
+                    boss2.dying = false;
                     bossDeath.on = false;
 
                 });
-               wonLevel1();
+               wonLevel2();
             };
         };
 
-        boss1.fire = function() {
+        boss2.fire = function() {
             for (let i = 0; i < 3; ++i) {
                 enemyBullet = enemy3Bullet.getFirstExists(false);
                 if (enemyBullet && this.x && this.y) {
-                    enemyBullet.reset(this.x, (this.y - 20 - (80*i)) + this.height / 2);
+                    enemyBullet.reset(this.x, (this.y - 20 - (30*i)) + this.height / 2);
                     var angle = game.physics.arcade.moveToObject(enemyBullet, player, bulletSpeed);
                     enemyBullet.angle = game.math.radToDeg(angle);
                 }
             }
         };
 
-        boss1.update = function() {
-            if (!boss1.alive) return;
-            var angleToPlayer = game.math.radToDeg(game.physics.arcade.angleBetween(boss1, player)) - 90;
-            var anglePointing = 180 - Math.abs(boss1.angle);
+        boss2.update = function() {
+            if (!boss2.alive) return;
+            var angleToPlayer = game.math.radToDeg(game.physics.arcade.angleBetween(boss2, player)) - 90;
+            var anglePointing = 180 - Math.abs(boss2.angle);
             if (anglePointing - angleToPlayer < 18) {
-                boss1.fire();
-                // bossFireTimer = game.time.events.add(5000, boss1.fire)
+                boss2.fire();
             }
         }
 
-        //  Big explosion for boss1
-        bossDeath = game.add.emitter(boss1.x, boss1.y);
-        bossDeath.width = boss1.width / 2;
-        bossDeath.height = boss1.height / 2;
+        //  Big explosion for boss2
+        bossDeath = game.add.emitter(boss2.x, boss2.y);
+        bossDeath.width = boss2.width / 2;
+        bossDeath.height = boss2.height / 2;
         bossDeath.makeParticles('explosion', [0,1,2,3,4,5,6,7], 20);
         bossDeath.setAlpha(0.9, 0, 900);
         bossDeath.setScale(0.3, 1.0, 0.3, 1.0, 1000, Phaser.Easing.Quintic.Out);
@@ -198,6 +195,8 @@ var level1 = {
         enemy2.createMultiple(5, 'enemy2');
         enemy2.setAll('anchor.x', 0.5);
         enemy2.setAll('anchor.y', 0.5);
+        enemy2.setAll('scale.x', 2);
+        enemy2.setAll('scale.x', 2);
         enemy2.forEach(function(enemy){
             addEnemyEmitterTrail(enemy);
             enemy.damageAmount = 30;
@@ -216,7 +215,6 @@ var level1 = {
         enemy3.setAll('anchor.y', 0.5);
         enemy3.setAll('scale.x', 0.5);
         enemy3.setAll('scale.y', 0.5);
-        enemy3.setAll('angle', 270);
         enemy3.forEach(function(enemy){
             addEnemyEmitterTrail(enemy);
             enemy.damageAmount = 10;
@@ -292,8 +290,8 @@ var level1 = {
         bulletRain.physicsBodyType = Phaser.Physics.ARCADE;
         bulletRain.createMultiple(30, 'bulletRain');
 
-        // console.log("boss1 AFTER CREATED");
-        // console.log(boss1);
+        // console.log("boss2 AFTER CREATED");
+        // console.log(boss2);
     },
 
 
@@ -342,11 +340,11 @@ var level1 = {
         shipTrail.y = player.y;
         shipTrail.x = player.x - 20;
 
-        if (boss1.alive) {
-            if (boss1.x > game.width / 2 + 150) {
-                boss1.x -= 1
+        if (boss2.alive) {
+            if (boss2.x > game.width / 2 + 150) {
+                boss2.x -= 1
             } else {
-                boss1.y = boss1.startingY + Math.sin((boss1BankX) / 70) * 100;
+                boss2.y = boss2.startingY + Math.sin((boss1BankX) / 70) * 100;
                 boss1BankX += 1
             }
 
@@ -363,13 +361,13 @@ var level1 = {
         game.physics.arcade.overlap(enemy3, shredingBullet, playerHitEnemy, null, this); // shred bullet with enemy3
         game.physics.arcade.overlap(player, enemy3Bullet, enemyHitsPlayer, null, this);
 
-        // boss1
-        // console.log("boss1 IN UPDATE");
-        // console.log(boss1);
-        game.physics.arcade.overlap(boss1, bullets, playerHitsBoss, bossHitTest, this);
-        game.physics.arcade.overlap(boss1, shredingBullet, playerHitsBoss, bossHitTest, this);
-        game.physics.arcade.overlap(player, boss1.rayLeft, rayHitsPlayer, null, this);
-        game.physics.arcade.overlap(player, boss1.rayRight, rayHitsPlayer, null, this);
+        // boss2
+        // console.log("boss2 IN UPDATE");
+        // console.log(boss2);
+        game.physics.arcade.overlap(boss2, bullets, playerHitsBoss, bossHitTest, this);
+        game.physics.arcade.overlap(boss2, shredingBullet, playerHitsBoss, bossHitTest, this);
+        game.physics.arcade.overlap(player, boss2.rayLeft, rayHitsPlayer, null, this);
+        game.physics.arcade.overlap(player, boss2.rayRight, rayHitsPlayer, null, this);
 
         // player with upgrades
         game.physics.arcade.overlap(player, healthUp, playerHeal, null, this);
