@@ -48,6 +48,7 @@ var level2 = {
 
         //  The hero!
         player = game.add.sprite(100, game.height / 2, 'ship');
+        player.scale.setTo(1.25, 1.25)
         player.anchor.setTo(0.5, 0.5);
         game.physics.enable(player, Phaser.Physics.ARCADE);
         player.body.maxVelocity.setTo(MAXSPEED, MAXSPEED);

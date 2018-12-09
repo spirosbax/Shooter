@@ -259,7 +259,7 @@ function playerHitEnemy(enemy, bullet) {
     var scoreThreshold = 5
     //  Enemies come quicker as score increases
     enemy2Spacing *= 0.9;
-    //  Blue enemies come in after a score of 1000
+    //  Blue enemies come in after a score of 5
     if (!enemy3Launched && player.score >= scoreThreshold) {
         console.log("LAUNCH ENEMY3")
         // update time between waves
@@ -278,8 +278,6 @@ function playerHitEnemy(enemy, bullet) {
 }
 
 function playerHitsBoss(boss1, bullet) {
-    // console.log("BOSS inside playerHitsBoss");
-    // console.log(boss1);
     bullet.kill()
     game.add.audio('hit', 0.3).play();
     if (player.got_shred) {
@@ -414,7 +412,7 @@ function launchUpgrades() {
                 launchUpgrade(tripleBullet)
             }
         }
-        if (player.score % 34 == 0) {
+        if (player.score % 35 == 0) {
             launchUpgrade(shredBulletUp)
         }
         if (player.score % 43 == 0) {
@@ -431,6 +429,7 @@ function wonLevel1() {
     console.log("YOU WON LEVEL1");
     // player.health = 200; permanent upgrade
     //TODO player going to next level animation
+    level1Background.stop()
     game.time.events.add(4000, startLvl2)
 }
 
