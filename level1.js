@@ -32,7 +32,8 @@ var level1 = {
         cur_level = 1
         enemy3Angle = 0
         // start background music
-        game.add.audio("background", 0.2, loop=true).play();
+        level1Background = game.add.audio("background", 0.2, loop=true)
+        level1Background.play()
 
         game.scale.pageAlignHorizontally = true;
 
@@ -49,6 +50,7 @@ var level1 = {
 
         //  The hero!
         player = game.add.sprite(100, game.height / 2, 'ship');
+        player.scale.setTo(1.25, 1.25)
         player.anchor.setTo(0.5, 0.5);
         game.physics.enable(player, Phaser.Physics.ARCADE);
         player.body.maxVelocity.setTo(MAXSPEED, MAXSPEED);
