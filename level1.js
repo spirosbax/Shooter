@@ -292,9 +292,6 @@ var level1 = {
         bulletRain.enableBody = true;
         bulletRain.physicsBodyType = Phaser.Physics.ARCADE;
         bulletRain.createMultiple(30, 'bulletRain');
-
-        // console.log("boss1 AFTER CREATED");
-        // console.log(boss1);
     },
 
 
@@ -365,8 +362,6 @@ var level1 = {
         game.physics.arcade.overlap(player, enemy3Bullet, enemyHitsPlayer, null, this);
 
         // boss1
-        // console.log("boss1 IN UPDATE");
-        // console.log(boss1);
         game.physics.arcade.overlap(boss1, bullets, playerHitsBoss, bossHitTest, this);
         game.physics.arcade.overlap(boss1, shredingBullet, playerHitsBoss, bossHitTest, this);
         game.physics.arcade.overlap(player, boss1.rayLeft, rayHitsPlayer, null, this);

@@ -298,7 +298,6 @@ function enemyHitsPlayer(player, bullet) {
     explosion.reset(player.body.x + player.body.halfWidth, player.body.y + player.body.halfHeight);
     explosion.alpha = 0.7;
     explosion.play('explosion', 30, false, true);
-    // TODO add explosion sound
     player.damage(bullet.damageAmount);
     bullet.kill();
     statsRender();
@@ -427,8 +426,6 @@ function launchUpgrades() {
 
 function wonLevel1() {
     console.log("YOU WON LEVEL1");
-    // player.health = 200; permanent upgrade
-    //TODO player going to next level animation
     level1Background.stop()
     game.time.events.add(4000, startLvl2)
 }
@@ -437,7 +434,6 @@ function wonLevel2() {
     console.log("YOU WON LEVEL2");
     game.time.events.remove(enemy2LaunchTimer);
     game.time.events.remove(enemy3LaunchTimer);
-    //TODO player going to next level animation
 }
 
 function rayHitsPlayer(player, ray) {

@@ -290,9 +290,6 @@ var level2 = {
         bulletRain.enableBody = true;
         bulletRain.physicsBodyType = Phaser.Physics.ARCADE;
         bulletRain.createMultiple(30, 'bulletRain');
-
-        // console.log("boss2 AFTER CREATED");
-        // console.log(boss2);
     },
 
 
